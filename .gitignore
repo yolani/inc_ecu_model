@@ -1,0 +1,5 @@
+.vscode
+/bazel-*
+*.pyc
+__pycache__/
+external/

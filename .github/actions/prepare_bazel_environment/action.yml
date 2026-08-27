@@ -1,0 +1,32 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: "Bazel Job"
+description: >
+  Sets up the runner for Bazel builds: environment variables, disk space,
+  cache restore, and sandbox. Cache save runs automatically at job end
+  via a post hook (even on failure/cancellation).
+
+  Place your bazel commands as normal 'run:' steps after this action.
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Bazelisk
+      uses: bazel-contrib/setup-bazel@0.19.0
+      with:
+        bazelisk-cache: true
+        disk-cache: false
+
+    - name: Allow linux-sandbox
+      uses: eclipse-score/cicd-actions/unblock-user-namespace-for-linux-sandbox@f89865691445b60e9229c36adb1c37b675e1ca85
