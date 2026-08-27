@@ -1,0 +1,78 @@
+# *******************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: "Bazel Job"
+description: >
+  Sets up the runner for Bazel builds: environment variables, disk space,
+  and sandbox.
+
+  Place your bazel commands as normal 'run:' steps after this action.
+
+inputs:
+  ubuntu-snapshot-mirror-url:
+    description: >
+      Optional secret URL part to override for public Ubuntu snapshot mirror base URL.
+      If set, Bazel downloader rewrites snapshot.ubuntu.com URLs to this mirror first
+      and keeps the original URL as fallback.
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Free Disk Space (Ubuntu)
+      uses: eclipse-score/more-disk-space@v1
+      with:
+        level: 4
+
+    - name: Install Bazelisk
+      uses: bazel-contrib/setup-bazel@0.19.0
+      with:
+        bazelisk-cache: false
+        disk-cache: false
+
+    - name: Configure optional Ubuntu snapshot mirror for Bazel downloader
+      shell: bash
+      env:
+        UBUNTU_SNAPSHOT_MIRROR_URL: ${{ inputs.ubuntu-snapshot-mirror-url }}
+      run: |
+        if [[ -z "${UBUNTU_SNAPSHOT_MIRROR_URL}" ]]; then
+          echo "No override for public Ubuntu snapshot mirror configured; using default snapshot.ubuntu.com URL."
+          exit 0
+        fi
+
+        MIRROR_URL="${UBUNTU_SNAPSHOT_MIRROR_URL}"
+        DOWNLOADER_CONFIG="${GITHUB_WORKSPACE}/user.downloader_config"
+
+        MIRROR_URL="${MIRROR_URL}" DOWNLOADER_CONFIG="${DOWNLOADER_CONFIG}" python3 - <<'PY'
+        import os
+        from pathlib import Path
+
+        mirror_url = os.environ["MIRROR_URL"]
+        downloader_config = Path(os.environ["DOWNLOADER_CONFIG"])
+        downloader_config.write_text(
+            "\n".join([
+                f"rewrite snapshot.ubuntu.com/ubuntu/[^/]*/(.*) {mirror_url}.debmirror.stablebuild.com/2026-04-01T10:40:01Z/archive.ubuntu.com/ubuntu/$1",
+                f"rewrite snapshot.ubuntu.com/ubuntu/[^/]*/(.*) {mirror_url}.debmirror.stablebuild.com/2026-04-01T10:40:01Z/ports.ubuntu.com/$1",
+                # Retain public mirror as fallback should quota of override mirror be exhausted
+                "rewrite snapshot.ubuntu.com/ubuntu/(.*) snapshot.ubuntu.com/ubuntu/$1",
+            ]) + "\n",
+            encoding="utf-8",
+        )
+        PY
+
+        echo "common --downloader_config=${DOWNLOADER_CONFIG}" >> "${GITHUB_WORKSPACE}/user.bazelrc"
+        echo "Configured Bazel downloader mirror with fallback for Ubuntu snapshot URLs."
+
+    - name: Allow linux-sandbox
+      uses: eclipse-score/cicd-actions/unblock-user-namespace-for-linux-sandbox@f89865691445b60e9229c36adb1c37b675e1ca85
