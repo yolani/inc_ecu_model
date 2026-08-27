@@ -14,19 +14,10 @@
 name: "Build & Test (Host)"
 
 on:
-  workflow_call:
-    inputs:
-      cache-mode:
-        description: "Cache mode override (empty = auto-compute from event context)."
-        type: string
-        default: ""
-      fetch-only:
-        description: "When true, runs --nobuild to fetch dependencies only."
-        type: string
-        default: "false"
-    secrets:
-      UBUNTU_SNAPSHOT_MIRROR_URL:
-        required: false
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
@@ -42,7 +33,6 @@ jobs:
         with:
           disk-cache: ${{ inputs.fetch-only != 'true' && 'build_and_test_host' || '' }}
           cache-mode: ${{ inputs.cache-mode }}
-          ubuntu-snapshot-mirror-url: ${{ secrets.UBUNTU_SNAPSHOT_MIRROR_URL }}
 
       - name: Build all targets
         if: inputs.fetch-only != 'true'
