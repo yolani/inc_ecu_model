@@ -2,4 +2,4 @@
 /bazel-*
 *.pyc
 __pycache__/
-external/
+/external
