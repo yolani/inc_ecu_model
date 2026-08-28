@@ -1,0 +1,29 @@
+test --test_output=errors
+
+common --registry=https://raw.githubusercontent.com/eclipse-score/bazel_registry/main/
+common --registry=https://bcr.bazel.build
+
+# CI configuration
+# We do not want to fail because of a flaky test.
+common:ci --flaky_test_attempts=5
+# Keep the CI log small while still showing that a job is progressing.
+common:ci --show_progress_rate_limit=10
+
+# Config shared by all linters. Required to generate the outputs our CI
+# workflows consume (human-readable report + machine-readable SARIF).
+build:_lint --output_groups=+rules_lint_human,+rules_lint_machine
+build:_lint --@aspect_rules_lint//lint:fail_on_violation=true
+build:_lint --keep_going
+
+# Ruff configuration
+# Run ruff on all Python targets with: bazel test --config=ruff //...
+build:ruff --config=_lint
+build:ruff --aspects=//tools/lint:linters.bzl%ruff
+
+# Ruff autofix configuration
+# Inherits all ruff flags above and additionally enables fix mode, so that
+# aspect_rules_lint runs `ruff check --fix` in a sandbox and collects the
+# edits as a unified-diff patch. Use `bazel run //:ruff.fix` to apply them.
+build:ruff-fix --config=ruff
+build:ruff-fix --@aspect_rules_lint//lint:fix
+build:ruff-fix --output_groups=+rules_lint_patch
