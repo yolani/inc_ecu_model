@@ -10,10 +10,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
-load("@rules_python//python:defs.bzl", "py_library")
 
-py_library(
-    name = "ecu_model",
-    srcs = ["main.py"],
-    visibility = ["//visibility:public"],
-)
+if __name__ == "__main__":
+    print("score_ecu_model consumed successfully")

@@ -10,10 +10,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_binary")
 
-py_library(
-    name = "ecu_model",
+py_binary(
+    name = "example",
     srcs = ["main.py"],
-    visibility = ["//visibility:public"],
+    main = "main.py",
+    deps = ["@score_ecu_model//score/ecu_model"],
 )

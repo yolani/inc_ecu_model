@@ -44,3 +44,6 @@ jobs:
         uses: ./.github/actions/upload_bazel_testlogs_on_failure
         with:
           artifact-name: bazel-testlogs-no-config
+
+      - name: Build module_integration_test
+        run: cd test && bazel build //... && bazel mod deps --lockfile_mode=update
