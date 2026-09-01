@@ -10,16 +10,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+load("@rules_python//python:defs.bzl", "py_library")
 
-import unittest
-
-
-class TestMain(unittest.TestCase):
-    pass
-
-    def test_empty(self):
-        pass
-
-
-if __name__ == "__main__":
-    unittest.main()
+py_library(
+    name = "ecu_model",
+    srcs = [
+        "ecu_model.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["@score_ecu_model_pip//pydantic"],
+)
