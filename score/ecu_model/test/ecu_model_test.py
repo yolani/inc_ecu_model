@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+import pickle
 import unittest
 from uuid import UUID, uuid4
 
@@ -45,7 +46,7 @@ class TestEcuModelElement(unittest.TestCase):
 
     def test_duplicate_id_raises_validation_error(self) -> None:
         shared_id = uuid4()
-        first = EcuModelElement(id=shared_id)  # noqa: F841 keep alive so the weak ref registry entry survives
+        EcuModelElement(id=shared_id)
         with self.assertRaises(ValidationError):
             EcuModelElement(id=shared_id)
 
@@ -68,6 +69,51 @@ class TestEcuModelElement(unittest.TestCase):
         bypassed = EcuModelElement.model_construct(id="not-a-uuid", description="desc")
         with self.assertRaises(ValidationError):
             EcuModelElement.model_validate(bypassed)
+
+
+class TestSerialization(unittest.TestCase):
+    def setUp(self) -> None:
+        self._saved_registry = dict(EcuModel.model_registry)
+        EcuModel.model_registry.clear()
+
+    def tearDown(self) -> None:
+        EcuModel.model_registry.clear()
+        EcuModel.model_registry.update(self._saved_registry)
+
+    def test_round_trip_restores_all_elements(self) -> None:
+        elements = [EcuModelElement(description="first"), EcuModelElement(description="second")]
+        blob = EcuModel.serialize()
+        EcuModel.model_registry.clear()
+
+        self.assertEqual(EcuModel.deserialize(blob), 2)
+        for element in elements:
+            restored = EcuModel.model_registry[element.id]
+            self.assertIsNot(restored, element)
+            self.assertEqual(restored.description, element.description)
+
+    def test_deserialize_detaches_pre_existing_instances(self) -> None:
+        original = EcuModelElement(description="original")
+        blob = EcuModel.serialize()
+        squatter = EcuModelElement(description="squatter")
+        EcuModel.model_registry[original.id] = squatter
+
+        EcuModel.deserialize(blob)
+
+        restored = EcuModel.model_registry[original.id]
+        self.assertEqual(restored.description, "original")
+        self.assertIsNot(restored, original)
+
+    def test_deserialize_drops_elements_absent_from_the_payload(self) -> None:
+        blob = EcuModel.serialize()
+        orphan = EcuModelElement()
+
+        EcuModel.deserialize(blob)
+
+        self.assertNotIn(orphan.id, EcuModel.model_registry)
+
+    def test_malformed_payload_is_rejected(self) -> None:
+        with self.assertRaises(TypeError):
+            EcuModel.deserialize(pickle.dumps({"not": "a registry"}))
 
 
 if __name__ == "__main__":

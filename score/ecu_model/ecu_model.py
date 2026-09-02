@@ -11,9 +11,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-from typing import Any, ClassVar, Self
+import pickle
+from typing import Any, ClassVar
 from uuid import UUID, uuid4
-from weakref import WeakValueDictionary
 
 from pydantic import (
     BaseModel,
@@ -25,12 +25,12 @@ from pydantic import (
 class EcuModel(BaseModel):
     """
     This class provides a registry for instances of EcuModelElement. All objects of type EcuModelElement are
-    automatically tracked in a weak reference registry to ensure uniqueness and prevent memory leaks because the registry
-    never keeps an element alive and allows for it to be garbage collected when no longer in use.
+    automatically tracked in the registry to ensure uniqueness and to make them resolvable by their identifier for the
+    whole lifetime of the process.
     Future extensions, additional post-initialization, validation, etc. actions can be implemented here.
     """
 
-    model_registry: ClassVar[WeakValueDictionary[UUID, "EcuModelElement"]] = WeakValueDictionary()
+    model_registry: ClassVar[dict[UUID, "EcuModelElement"]] = {}
 
     def model_post_init(self, context: Any, /) -> None:
         """
@@ -53,6 +53,34 @@ class EcuModel(BaseModel):
         if self.id in EcuModel.model_registry.keys():
             raise ValueError(f"Duplicate instance {str(self)}")
         EcuModel.model_registry[self.id] = self
+
+    @classmethod
+    def serialize(cls) -> bytes:
+        """
+        Pickle the whole model registry, i.e. every registered EcuModelElement.
+        """
+        return pickle.dumps(EcuModel.model_registry, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def deserialize(cls, data: bytes) -> int:
+        """
+        Replace the model registry with a previously serialized one and return the number of restored elements.
+
+        Args:
+            data: Payload produced by serialize().
+
+        Raises:
+            TypeError: If the payload does not contain a registry of model elements.
+        """
+        restored = pickle.loads(data)
+        if not isinstance(restored, dict) or not all(
+            isinstance(key, UUID) and isinstance(value, EcuModelElement) for key, value in restored.items()
+        ):
+            raise TypeError("Payload does not contain an EcuModel registry")
+        # Replacing the contents rather than the dict itself keeps existing references to the registry valid.
+        EcuModel.model_registry.clear()
+        EcuModel.model_registry.update(restored)
+        return len(EcuModel.model_registry)
 
 
 class EcuModelElement(EcuModel):
