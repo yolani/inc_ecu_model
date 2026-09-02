@@ -21,6 +21,7 @@ from score.ecu_model.data_types.common import (
     DataTypeBase,
     DataTypeKind,
     DataTypeRef,
+    DataTypeSource,
     TypeRef,
 )
 from score.ecu_model.data_types.primitives import PrimitiveType
@@ -30,7 +31,7 @@ from score.ecu_model.ecu_model import EcuModel, EcuModelElement
 class StructMember(BaseModel):
     """Minimal struct member used to exercise type references in the tests."""
 
-    name: str
+    identifier: str
     type: TypeRef
 
 
@@ -44,6 +45,27 @@ class StructDataType(DataTypeBase):
 class TestDataTypeKind(unittest.TestCase):
     def test_primitive_is_not_a_declarable_kind(self) -> None:
         self.assertNotIn("primitive", {kind.value for kind in DataTypeKind})
+
+    def test_kind_and_source_str_representation(self) -> None:
+        self.assertEqual(str(DataTypeKind.STRUCT), "struct")
+        self.assertEqual(str(DataTypeSource.FRANCA), "franca")
+        self.assertEqual(str(DataTypeSource.CPP_HEADER_FILE), "cpp_header_file")
+
+
+class TestDataTypeBaseCommon(unittest.TestCase):
+    def test_unsupported_source_kind_raises_value_error(self) -> None:
+        with self.assertRaises(ValueError):
+            DataTypeBase._get_language_spec("unsupported_source_kind")  # type: ignore[arg-type]
+
+    def test_optional_fields_defaults_and_values(self) -> None:
+        data_type = DataTypeBase(
+            kind=DataTypeKind.STRUCT,
+            identifier="MyStruct",
+            source_kind=DataTypeSource.FRANCA,
+            deployment_properties={"key": "value"},
+        )
+        self.assertIsNone(data_type.source_uri)
+        self.assertEqual(data_type.deployment_properties, {"key": "value"})
 
 
 class TestTypeRef(unittest.TestCase):
@@ -73,7 +95,7 @@ class TestTypeRef(unittest.TestCase):
 
 class TestDataTypeRefResolution(unittest.TestCase):
     def test_resolves_registered_definition(self) -> None:
-        definition = DataTypeBase(kind=DataTypeKind.STRUCT, name="Position")
+        definition = DataTypeBase(kind=DataTypeKind.STRUCT, identifier="Position", source_kind=DataTypeSource.FRANCA)
 
         resolved = DataTypeRef(target_id=definition.id).resolve()
 
@@ -92,7 +114,9 @@ class TestDataTypeRefResolution(unittest.TestCase):
     def test_reference_survives_definition_that_does_not_exist_yet(self) -> None:
         ref = DataTypeRef(target_id=uuid4())
 
-        definition = DataTypeBase(id=ref.target_id, kind=DataTypeKind.ENUM, name="Gear")
+        definition = DataTypeBase(
+            id=ref.target_id, kind=DataTypeKind.ENUM, identifier="Gear", source_kind=DataTypeSource.FRANCA
+        )
 
         self.assertIs(ref.resolve(), definition)
 
@@ -111,19 +135,21 @@ class TestPickleRoundTrip(unittest.TestCase):
     @staticmethod
     def _build_type_graph() -> tuple[DataTypeBase, DataTypeBase]:
         position = StructDataType(
-            name="Position",
-            namespace="app::geometry",
+            identifier="Position",
+            namespace="app.geometry",
+            source_kind=DataTypeSource.FRANCA,
             members=[
-                StructMember(name="x", type=PrimitiveType.FLOAT),
-                StructMember(name="y", type=PrimitiveType.FLOAT),
+                StructMember(identifier="x", type=PrimitiveType.FLOAT),
+                StructMember(identifier="y", type=PrimitiveType.FLOAT),
             ],
         )
         waypoint = StructDataType(
-            name="Waypoint",
-            namespace="app::routing",
+            identifier="Waypoint",
+            namespace="app.routing",
+            source_kind=DataTypeSource.FRANCA,
             members=[
-                StructMember(name="position", type=DataTypeRef(target_id=position.id)),
-                StructMember(name="index", type=PrimitiveType.UINT32),
+                StructMember(identifier="position", type=DataTypeRef(target_id=position.id)),
+                StructMember(identifier="index", type=PrimitiveType.UINT32),
             ],
         )
         return position, waypoint
@@ -152,7 +178,7 @@ class TestPickleRoundTrip(unittest.TestCase):
 
         restored = EcuModel.model_registry[position.id]
         assert isinstance(restored, StructDataType)
-        self.assertEqual(restored.name, "Position")
+        self.assertEqual(restored.identifier, "Position")
         self.assertEqual(restored.members[0].type, PrimitiveType.FLOAT)
 
 

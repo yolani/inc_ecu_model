@@ -10,20 +10,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
-load("@rules_python//python:defs.bzl", "py_library")
+import re
 
-py_library(
-    name = "data_types",
-    srcs = [
-        "common.py",
-        "cpp.py",
-        "franca.py",
-        "primitives.py",
-        "protobuf.py",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+# Franca IDL identifier: letter or underscore, followed by letters, digits or underscores (ASCII, case sensitive).
+FRANCA_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+FRANCA_PACKAGE_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*)(?:\.[A-Za-z_][A-Za-z0-9_]*)*$")
+FRANCA_SEPARATOR = "."

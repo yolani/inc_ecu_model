@@ -81,3 +81,4 @@ jobs:
           file: coverage.xml
           language: Python
           label: code-coverage/bazel
+          fail-on-error: false

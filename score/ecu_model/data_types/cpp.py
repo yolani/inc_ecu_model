@@ -10,20 +10,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
-load("@rules_python//python:defs.bzl", "py_library")
 
-py_library(
-    name = "data_types",
-    srcs = [
-        "common.py",
-        "cpp.py",
-        "franca.py",
-        "primitives.py",
-        "protobuf.py",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+CPP_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+CPP_NAMESPACE_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*)(?:::[A-Za-z_][A-Za-z0-9_]*)*$")
+CPP_SEPARATOR = "::"

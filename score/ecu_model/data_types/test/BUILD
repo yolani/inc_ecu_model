@@ -31,3 +31,33 @@ py_test(
         "@score_ecu_model_pip//pydantic",
     ],
 )
+
+py_test(
+    name = "franca_test",
+    size = "small",
+    srcs = ["franca_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
+    name = "cpp_test",
+    size = "small",
+    srcs = ["cpp_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
+    name = "protobuf_test",
+    size = "small",
+    srcs = ["protobuf_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
