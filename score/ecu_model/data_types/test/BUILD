@@ -33,6 +33,16 @@ py_test(
 )
 
 py_test(
+    name = "composite_test",
+    size = "small",
+    srcs = ["composite_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
     name = "enum_test",
     size = "small",
     srcs = ["enum_test.py"],
@@ -66,6 +76,26 @@ py_test(
     name = "protobuf_test",
     size = "small",
     srcs = ["protobuf_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
+    name = "struct_test",
+    size = "small",
+    srcs = ["struct_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
+    name = "union_test",
+    size = "small",
+    srcs = ["union_test.py"],
     deps = [
         "//score/ecu_model/data_types",
         "@score_ecu_model_pip//pydantic",

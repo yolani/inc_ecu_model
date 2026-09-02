@@ -13,12 +13,13 @@
 
 import unittest
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.struct import StructDataType
 
 
 class TestProtobufValidation(unittest.TestCase):
     def test_protobuf_identifier_and_package_are_validated(self) -> None:
-        DataTypeBase(
+        StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="MyMessage",
             source_kind=DataTypeSource.PROTOBUF,
@@ -26,14 +27,14 @@ class TestProtobufValidation(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            DataTypeBase(
+            StructDataType(
                 kind=DataTypeKind.STRUCT,
                 identifier="1invalid",
                 source_kind=DataTypeSource.PROTOBUF,
             )
 
         with self.assertRaises(ValueError):
-            DataTypeBase(
+            StructDataType(
                 kind=DataTypeKind.STRUCT,
                 identifier="MyMessage",
                 source_kind=DataTypeSource.PROTOBUF,
@@ -41,7 +42,7 @@ class TestProtobufValidation(unittest.TestCase):
             )
 
     def test_protobuf_fully_qualified_name(self) -> None:
-        dt1 = DataTypeBase(
+        dt1 = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="MyMessage",
             source_kind=DataTypeSource.PROTOBUF,
@@ -49,7 +50,7 @@ class TestProtobufValidation(unittest.TestCase):
         )
         self.assertEqual(dt1.fully_qualified_name, "com.example.sensor.MyMessage")
 
-        dt2 = DataTypeBase(
+        dt2 = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="MyMessage",
             source_kind=DataTypeSource.PROTOBUF,

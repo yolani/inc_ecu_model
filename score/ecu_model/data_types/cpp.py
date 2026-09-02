@@ -13,8 +13,6 @@
 
 import re
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
 CPP_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 CPP_NAMESPACE_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*)(?:::[A-Za-z_][A-Za-z0-9_]*)*$")
 CPP_SEPARATOR = "::"

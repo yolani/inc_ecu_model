@@ -13,9 +13,9 @@
 
 from enum import Enum
 import re
-from uuid import UUID
+from typing import Any
 
-from pydantic import BaseModel, Field, FilePath, ValidationInfo, field_validator
+from pydantic import Field, FilePath, ValidationInfo, field_validator
 
 from score.ecu_model.data_types.cpp import CPP_IDENTIFIER_PATTERN, CPP_NAMESPACE_PATTERN, CPP_SEPARATOR
 from score.ecu_model.data_types.franca import FRANCA_IDENTIFIER_PATTERN, FRANCA_PACKAGE_PATTERN, FRANCA_SEPARATOR
@@ -86,6 +86,12 @@ class DataTypeBase(EcuModelElement):
         default_factory=dict,
         description="Deployment properties aggregated from all communication bindings using this data type",
     )
+
+    def model_post_init(self, context: Any, /) -> None:
+        """Reject instantiation of this abstract base before registry insertion."""
+        if type(self) is DataTypeBase:
+            raise TypeError("DataTypeBase is abstract, instantiate a concrete data type")
+        super().model_post_init(context)
 
     @classmethod
     def _get_language_spec(cls, source_kind: DataTypeSource) -> tuple[re.Pattern[str], re.Pattern[str], str]:

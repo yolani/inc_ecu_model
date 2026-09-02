@@ -13,12 +13,13 @@
 
 import unittest
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.struct import StructDataType
 
 
 class TestCppValidation(unittest.TestCase):
     def test_cpp_identifier_and_namespace_are_validated(self) -> None:
-        DataTypeBase(
+        StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="_value2",
             source_kind=DataTypeSource.CPP_HEADER_FILE,
@@ -26,14 +27,14 @@ class TestCppValidation(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            DataTypeBase(
+            StructDataType(
                 kind=DataTypeKind.STRUCT,
                 identifier="with-dash",
                 source_kind=DataTypeSource.CPP_HEADER_FILE,
             )
 
         with self.assertRaises(ValueError):
-            DataTypeBase(
+            StructDataType(
                 kind=DataTypeKind.STRUCT,
                 identifier="Position",
                 source_kind=DataTypeSource.CPP_HEADER_FILE,
@@ -41,7 +42,7 @@ class TestCppValidation(unittest.TestCase):
             )
 
     def test_cpp_fully_qualified_name(self) -> None:
-        dt1 = DataTypeBase(
+        dt1 = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="Vector3D",
             source_kind=DataTypeSource.CPP_HEADER_FILE,
@@ -49,7 +50,7 @@ class TestCppValidation(unittest.TestCase):
         )
         self.assertEqual(dt1.fully_qualified_name, "app::geometry::Vector3D")
 
-        dt2 = DataTypeBase(
+        dt2 = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="Vector3D",
             source_kind=DataTypeSource.CPP_HEADER_FILE,

@@ -12,7 +12,7 @@
 # *******************************************************************************
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
 from typing import Literal
 
 from score.ecu_model.data_types.common import (

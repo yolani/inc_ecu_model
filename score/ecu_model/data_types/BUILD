@@ -16,11 +16,14 @@ py_library(
     name = "data_types",
     srcs = [
         "common.py",
+        "composite.py",
         "cpp.py",
         "enum.py",
         "franca.py",
         "primitives.py",
         "protobuf.py",
+        "struct.py",
+        "union.py",
     ],
     visibility = ["//visibility:public"],
     deps = [

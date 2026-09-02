@@ -13,12 +13,13 @@
 
 import unittest
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.struct import StructDataType
 
 
 class TestFrancaValidation(unittest.TestCase):
     def test_franca_identifier_and_package_are_validated(self) -> None:
-        DataTypeBase(
+        StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="Position",
             source_kind=DataTypeSource.FRANCA,
@@ -26,14 +27,14 @@ class TestFrancaValidation(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            DataTypeBase(
+            StructDataType(
                 kind=DataTypeKind.STRUCT,
                 identifier="1invalid",
                 source_kind=DataTypeSource.FRANCA,
             )
 
         with self.assertRaises(ValueError):
-            DataTypeBase(
+            StructDataType(
                 kind=DataTypeKind.STRUCT,
                 identifier="Position",
                 source_kind=DataTypeSource.FRANCA,
@@ -41,7 +42,7 @@ class TestFrancaValidation(unittest.TestCase):
             )
 
     def test_franca_fully_qualified_name(self) -> None:
-        dt1 = DataTypeBase(
+        dt1 = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="Position",
             source_kind=DataTypeSource.FRANCA,
@@ -49,7 +50,7 @@ class TestFrancaValidation(unittest.TestCase):
         )
         self.assertEqual(dt1.fully_qualified_name, "com.example.model.Position")
 
-        dt2 = DataTypeBase(
+        dt2 = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="Position",
             source_kind=DataTypeSource.FRANCA,

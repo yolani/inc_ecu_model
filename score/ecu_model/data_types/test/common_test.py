@@ -58,7 +58,7 @@ class TestDataTypeBaseCommon(unittest.TestCase):
             DataTypeBase._get_language_spec("unsupported_source_kind")  # type: ignore[arg-type]
 
     def test_optional_fields_defaults_and_values(self) -> None:
-        data_type = DataTypeBase(
+        data_type = StructDataType(
             kind=DataTypeKind.STRUCT,
             identifier="MyStruct",
             source_kind=DataTypeSource.FRANCA,
@@ -66,6 +66,14 @@ class TestDataTypeBaseCommon(unittest.TestCase):
         )
         self.assertIsNone(data_type.source_uri)
         self.assertEqual(data_type.deployment_properties, {"key": "value"})
+
+    def test_rejects_direct_instantiation(self) -> None:
+        with self.assertRaisesRegex(TypeError, "DataTypeBase is abstract"):
+            DataTypeBase(
+                kind=DataTypeKind.STRUCT,
+                identifier="MyStruct",
+                source_kind=DataTypeSource.FRANCA,
+            )
 
 
 class TestTypeRef(unittest.TestCase):
@@ -95,7 +103,7 @@ class TestTypeRef(unittest.TestCase):
 
 class TestDataTypeRefResolution(unittest.TestCase):
     def test_resolves_registered_definition(self) -> None:
-        definition = DataTypeBase(kind=DataTypeKind.STRUCT, identifier="Position", source_kind=DataTypeSource.FRANCA)
+        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
 
         resolved = DataTypeRef(target_id=definition.id).resolve()
 
@@ -114,9 +122,7 @@ class TestDataTypeRefResolution(unittest.TestCase):
     def test_reference_survives_definition_that_does_not_exist_yet(self) -> None:
         ref = DataTypeRef(target_id=uuid4())
 
-        definition = DataTypeBase(
-            id=ref.target_id, kind=DataTypeKind.ENUM, identifier="Gear", source_kind=DataTypeSource.FRANCA
-        )
+        definition = StructDataType(id=ref.target_id, identifier="Gear", source_kind=DataTypeSource.FRANCA)
 
         self.assertIs(ref.resolve(), definition)
 

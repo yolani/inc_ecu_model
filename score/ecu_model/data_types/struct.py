@@ -10,9 +10,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
-import re
+from __future__ import annotations
 
-# Franca IDL identifier: letter or underscore, followed by letters, digits or underscores (ASCII, case sensitive).
-FRANCA_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-FRANCA_PACKAGE_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*)(?:\.[A-Za-z_][A-Za-z0-9_]*)*$")
-FRANCA_SEPARATOR = "."
+from typing import Literal
+
+from pydantic import Field
+
+from score.ecu_model.data_types.common import DataTypeKind
+from score.ecu_model.data_types.composite import CompositeDataType
+
+
+class StructDataType(CompositeDataType):
+    """A declared struct data type with named fields."""
+
+    kind: Literal[DataTypeKind.STRUCT] = Field(default=DataTypeKind.STRUCT, frozen=True)
