@@ -106,3 +106,25 @@ class EcuModelElement(EcuModel):
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, description={self.description})"
+
+
+class EcuModelRef(BaseModel):
+    """Reference to a registered ECU model element by its unique model identifier."""
+
+    target_id: UUID = Field(
+        description="Identifier of the referenced ECU model element",
+    )
+
+    def resolve(self) -> EcuModelElement:
+        """
+        Look the referenced model element up in the EcuModel registry.
+
+        Resolution is deliberately lazy: a reference may be deserialized before its definition exists.
+
+        Raises:
+            KeyError: If no model element with the referenced identifier is registered.
+        """
+        element = EcuModel.model_registry.get(self.target_id)
+        if element is None:
+            raise KeyError(f"Unresolved ECU model reference {self.target_id}")
+        return element

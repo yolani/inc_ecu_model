@@ -17,6 +17,7 @@ py_library(
     srcs = [
         "common.py",
         "cpp.py",
+        "enum.py",
         "franca.py",
         "primitives.py",
         "protobuf.py",

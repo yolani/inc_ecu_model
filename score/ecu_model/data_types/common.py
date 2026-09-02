@@ -25,7 +25,7 @@ from score.ecu_model.data_types.protobuf import (
     PROTOBUF_PACKAGE_PATTERN,
     PROTOBUF_SEPARATOR,
 )
-from score.ecu_model.ecu_model import EcuModel, EcuModelElement
+from score.ecu_model.ecu_model import EcuModelElement, EcuModelRef
 
 
 class DataTypeKind(str, Enum):
@@ -137,26 +137,12 @@ class DataTypeBase(EcuModelElement):
         return f"{self.namespace}{separator}{self.identifier}"
 
 
-class DataTypeRef(BaseModel):
+class DataTypeRef(EcuModelRef):
     """Reference to a declared data type definition by its unique model identifier."""
 
-    target_id: UUID = Field(
-        description="Identifier of the referenced data type definition",
-    )
-
     def resolve(self) -> DataTypeBase:
-        """
-        Look the referenced data type definition up in the EcuModel registry.
-
-        Resolution is deliberately lazy: a reference may be deserialized before its definition exists.
-
-        Raises:
-            KeyError: If no model element with the referenced identifier is registered.
-            TypeError: If the referenced model element is not a data type definition.
-        """
-        element = EcuModel.model_registry.get(self.target_id)
-        if element is None:
-            raise KeyError(f"Unresolved data type reference {self.target_id}")
+        """Resolve this reference and ensure that it points to a data type definition."""
+        element = super().resolve()
         if not isinstance(element, DataTypeBase):
             raise TypeError(f"Reference {self.target_id} points to {type(element).__name__}, expected DataTypeBase")
         return element

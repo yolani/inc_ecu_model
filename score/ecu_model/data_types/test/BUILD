@@ -33,6 +33,16 @@ py_test(
 )
 
 py_test(
+    name = "enum_test",
+    size = "small",
+    srcs = ["enum_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
     name = "franca_test",
     size = "small",
     srcs = ["franca_test.py"],

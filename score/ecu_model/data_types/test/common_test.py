@@ -25,7 +25,7 @@ from score.ecu_model.data_types.common import (
     TypeRef,
 )
 from score.ecu_model.data_types.primitives import PrimitiveType
-from score.ecu_model.ecu_model import EcuModel, EcuModelElement
+from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
 
 
 class StructMember(BaseModel):
@@ -119,6 +119,13 @@ class TestDataTypeRefResolution(unittest.TestCase):
         )
 
         self.assertIs(ref.resolve(), definition)
+
+
+class TestEcuModelRefResolution(unittest.TestCase):
+    def test_resolves_registered_model_element(self) -> None:
+        element = EcuModelElement()
+
+        self.assertIs(EcuModelRef(target_id=element.id).resolve(), element)
 
 
 class TestPickleRoundTrip(unittest.TestCase):
