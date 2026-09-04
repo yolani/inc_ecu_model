@@ -24,6 +24,16 @@ py_test(
 )
 
 py_test(
+    name = "map_test",
+    size = "small",
+    srcs = ["map_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
     name = "primitives_test",
     size = "small",
     srcs = ["primitives_test.py"],
