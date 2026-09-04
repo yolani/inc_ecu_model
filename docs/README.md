@@ -20,3 +20,4 @@ SPDX-License-Identifier: Apache-2.0
 User and developer documentation will be shared here in the future.
 
 - [Orion builder migration](orion-builder-migration.md)
+- [UUID reference rationale](uuid-references-rationale.md)
