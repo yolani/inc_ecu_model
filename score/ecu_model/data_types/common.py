@@ -41,7 +41,7 @@ class DataTypeKind(str, Enum):
     ARRAY = "array"
     MAP = "map"
     TYPEDEF = "typedef"
-    EXTERNAL = "external"  # TODO: do we need this or can this be deducted from the source_kind property?
+    EXTERNAL = "external"
 
     def __str__(self) -> str:
         """Return the canonical data type kind name."""

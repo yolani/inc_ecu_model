@@ -27,7 +27,6 @@ class ExternalDataType(DataTypeBase):
         default=DataTypeSource.CPP_HEADER_FILE,
         description="Origin of the data type definition, defaults to CPP_HEADER_FILE for external types",
     )
-    # TODO: could be Path?
     header: FilePath = Field(
         description="Header include path or explicitly quoted/bracketed include",
     )
