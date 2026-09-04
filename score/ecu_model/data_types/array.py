@@ -67,6 +67,8 @@ class ArrayDataType(DataTypeBase):
         """Validate array naming and dimension constraints."""
         if self.is_inline and self.identifier is not None:
             raise ValueError("inline arrays must not have an identifier")
+        if self.is_inline and self.namespace is not None:
+            raise ValueError("inline arrays must not have a namespace")
         if not self.is_inline and self.identifier is None:
             raise ValueError("non-inline arrays require an identifier")
         if (

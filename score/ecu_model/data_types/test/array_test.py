@@ -63,6 +63,16 @@ class TestArrayDataType(unittest.TestCase):
             )
         self.assertIn("inline arrays must not have an identifier", str(ctx.exception))
 
+    def test_rejects_inline_array_with_namespace(self) -> None:
+        with self.assertRaises(ValidationError) as ctx:
+            ArrayDataType(
+                namespace="com.example",
+                source_kind=DataTypeSource.FRANCA,
+                data_type=PrimitiveDataType.UINT8,
+                is_inline=True,
+            )
+        self.assertIn("inline arrays must not have a namespace", str(ctx.exception))
+
     def test_rejects_non_inline_array_without_identifier(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             ArrayDataType(
