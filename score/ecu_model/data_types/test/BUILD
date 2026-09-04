@@ -113,6 +113,16 @@ py_test(
 )
 
 py_test(
+    name = "typedef_test",
+    size = "small",
+    srcs = ["typedef_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
     name = "union_test",
     size = "small",
     srcs = ["union_test.py"],
