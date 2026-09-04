@@ -42,6 +42,10 @@ class DataTypeField(EcuModelElement):
         default=False,
         description="Whether the field may be absent, e.g. a proto2 or Franca optional field",
     )
+    default: str | None = Field(
+        default=None,
+        description="Optional default value carried over from the source IDL, serialized as string",
+    )
     deployment_properties: dict[str, object] = Field(
         default_factory=dict,
         description="Deployment properties aggregated from all communication bindings using this field",

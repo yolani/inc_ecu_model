@@ -137,6 +137,8 @@ class DataTypeBase(EcuModelElement):
     @property
     def fully_qualified_name(self) -> str:
         """Return the fully qualified name combining namespace and identifier."""
+        if self.identifier is None:
+            raise ValueError("Data types without an identifier do not have a fully qualified name")
         if not self.namespace:
             return self.identifier
         _, _, separator = self._get_language_spec(self.source_kind)

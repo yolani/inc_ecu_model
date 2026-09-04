@@ -75,6 +75,15 @@ class TestDataTypeBaseCommon(unittest.TestCase):
                 source_kind=DataTypeSource.FRANCA,
             )
 
+    def test_rejects_none_identifier_for_non_array_types(self) -> None:
+        with self.assertRaises(ValidationError) as ctx:
+            StructDataType(
+                kind=DataTypeKind.STRUCT,
+                identifier=None,  # type: ignore[arg-type]
+                source_kind=DataTypeSource.FRANCA,
+            )
+        self.assertIn("Input should be a valid string", str(ctx.exception))
+
 
 class TestTypeRef(unittest.TestCase):
     adapter = TypeAdapter(TypeRef)

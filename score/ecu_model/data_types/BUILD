@@ -15,6 +15,7 @@ load("@rules_python//python:defs.bzl", "py_library")
 py_library(
     name = "data_types",
     srcs = [
+        "array.py",
         "common.py",
         "composite.py",
         "cpp.py",

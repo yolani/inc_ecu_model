@@ -14,6 +14,16 @@
 load("@rules_python//python:defs.bzl", "py_test")
 
 py_test(
+    name = "array_test",
+    size = "small",
+    srcs = ["array_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
     name = "primitives_test",
     size = "small",
     srcs = ["primitives_test.py"],
