@@ -10,14 +10,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+import re
 
-load("@rules_python//python:defs.bzl", "py_test")
-
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+# Franca IDL identifier: letter or underscore, followed by letters, digits or underscores (ASCII, case sensitive).
+FRANCA_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+FRANCA_PACKAGE_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*)(?:\.[A-Za-z_][A-Za-z0-9_]*)*$")
+FRANCA_SEPARATOR = "."

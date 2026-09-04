@@ -10,14 +10,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+from __future__ import annotations
 
-load("@rules_python//python:defs.bzl", "py_test")
+from typing import Literal
 
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+from pydantic import Field
+
+from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, TypeRef
+
+
+class MapDataType(DataTypeBase):
+    """Definition of a map data type with key and value types."""
+
+    kind: Literal[DataTypeKind.MAP] = Field(default=DataTypeKind.MAP, frozen=True)
+    key_type: TypeRef = Field(
+        description="Map key type definition",
+    )
+    value_type: TypeRef = Field(
+        description="Map value type definition",
+    )

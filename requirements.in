@@ -1,1 +1,2 @@
-pydantic:>=2.13.0
+pydantic>=2.13.0
+lcov_cobertura>=2.1.1

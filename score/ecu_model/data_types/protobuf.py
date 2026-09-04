@@ -11,13 +11,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load("@rules_python//python:defs.bzl", "py_test")
+import re
 
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+# Protobuf identifier: letter or underscore, followed by letters, digits or underscores (ASCII, case sensitive).
+PROTOBUF_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+PROTOBUF_PACKAGE_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*)(?:\.[A-Za-z_][A-Za-z0-9_]*)*$")
+PROTOBUF_SEPARATOR = "."
