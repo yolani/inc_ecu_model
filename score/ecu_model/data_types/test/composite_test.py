@@ -130,6 +130,20 @@ class TestCompositeDataType(unittest.TestCase):
                 extends={"target_id": parent_enum.id},
             )
 
+    def test_accepts_elements_in_place_of_references(self) -> None:
+        parent = StructDataType(identifier="BasePosition", source_kind=DataTypeSource.FRANCA)
+        field = DataTypeField(identifier="x", data_type=PrimitiveDataType.UINT32)
+
+        data_type = StructDataType(
+            identifier="Position",
+            source_kind=DataTypeSource.FRANCA,
+            extends=parent,
+            fields=[field],
+        )
+
+        self.assertEqual(data_type.extends.target_id, parent.id)
+        self.assertEqual(data_type.fields[0].identifier, "x")
+
 
 if __name__ == "__main__":
     unittest.main()

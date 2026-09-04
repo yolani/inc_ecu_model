@@ -47,8 +47,8 @@ class TestUnionDataType(unittest.TestCase):
 
         self.assertEqual(data_type.kind, DataTypeKind.UNION)
         self.assertIsInstance(data_type.fields, tuple)
-        self.assertEqual(data_type.fields[0].resolve().identifier, "distance")
-        self.assertEqual(data_type.fields[1].resolve().identifier, "angle")
+        self.assertEqual(data_type.fields[0].identifier, "distance")
+        self.assertEqual(data_type.fields[1].identifier, "angle")
 
     def test_rejects_optional_fields(self) -> None:
         with self.assertRaisesRegex(ValidationError, "union fields must not be declared optional"):

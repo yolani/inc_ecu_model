@@ -39,8 +39,8 @@ class TestStructDataType(unittest.TestCase):
 
         self.assertEqual(data_type.kind, DataTypeKind.STRUCT)
         self.assertIsInstance(data_type.fields, tuple)
-        self.assertEqual(data_type.fields[0].resolve().identifier, "x")
-        self.assertEqual(data_type.fields[1].resolve().identifier, "y")
+        self.assertEqual(data_type.fields[0].identifier, "x")
+        self.assertEqual(data_type.fields[1].identifier, "y")
 
     def test_defaults_to_a_required_field_without_wire_tag(self) -> None:
         field = DataTypeField(identifier="x", data_type=PrimitiveDataType.UINT32)

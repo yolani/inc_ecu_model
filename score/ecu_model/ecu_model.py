@@ -19,6 +19,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    model_validator,
 )
 
 
@@ -109,11 +110,27 @@ class EcuModelElement(EcuModel):
 
 
 class EcuModelRef(BaseModel):
-    """Reference to a registered ECU model element by its unique model identifier."""
+    """
+    Reference to a registered ECU model element by its unique model identifier.
+
+    References behave like the element they point to: attribute reads and writes are delegated to the target and
+    a target element (or its identifier) may be assigned directly wherever a reference is expected. Referencing by
+    identifier instead of by object keeps references valid even when pydantic recreates instances during validation.
+    """
 
     target_id: UUID = Field(
         description="Identifier of the referenced ECU model element",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_element_or_identifier(cls, value: Any) -> Any:
+        """Accept a model element or a bare identifier in place of an explicit reference payload."""
+        if isinstance(value, EcuModelElement):
+            return {"target_id": value.id}
+        if isinstance(value, UUID):
+            return {"target_id": value}
+        return value
 
     def resolve(self) -> EcuModelElement:
         """
@@ -128,3 +145,16 @@ class EcuModelRef(BaseModel):
         if element is None:
             raise KeyError(f"Unresolved ECU model reference {self.target_id}")
         return element
+
+    def __getattr__(self, name: str) -> Any:
+        """Transparently delegate attribute reads to the referenced target element."""
+        if name.startswith("_"):
+            return super().__getattr__(name)
+        return getattr(self.resolve(), name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Transparently delegate attribute writes to the referenced target element."""
+        if name.startswith("_") or name in type(self).model_fields:
+            super().__setattr__(name, value)
+        else:
+            setattr(self.resolve(), name, value)

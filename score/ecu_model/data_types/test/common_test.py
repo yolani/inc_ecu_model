@@ -138,6 +138,29 @@ class TestDataTypeRefResolution(unittest.TestCase):
 
         self.assertIs(resolved, definition)
 
+    def test_delegates_attribute_access_transparently(self) -> None:
+        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        ref = DataTypeRef(target_id=definition.id)
+
+        self.assertEqual(ref.identifier, "Position")
+        self.assertEqual(ref.kind, DataTypeKind.STRUCT)
+
+    def test_delegates_attribute_assignment_transparently(self) -> None:
+        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        ref = DataTypeRef(target_id=definition.id)
+
+        ref.description = "a point in space"
+
+        self.assertEqual(definition.description, "a point in space")
+
+    def test_accepts_element_or_identifier_in_place_of_a_reference(self) -> None:
+        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        adapter = TypeAdapter(DataTypeRef)
+
+        for source in (definition, definition.id):
+            with self.subTest(source=source):
+                self.assertEqual(adapter.validate_python(source).target_id, definition.id)
+
     def test_unknown_identifier_raises_key_error(self) -> None:
         with self.assertRaises(KeyError):
             DataTypeRef(target_id=uuid4()).resolve()

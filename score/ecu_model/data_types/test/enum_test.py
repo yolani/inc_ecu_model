@@ -38,8 +38,10 @@ class TestEnumDataType(unittest.TestCase):
         self.assertEqual(data_type.kind, DataTypeKind.ENUM)
         self.assertEqual(data_type.underlying_type, PrimitiveDataType.UINT32)
         self.assertIsInstance(data_type.values, tuple)
-        self.assertEqual(data_type.values[0].resolve().value, 0)
-        self.assertEqual(data_type.values[1].resolve().value, 1)
+        self.assertEqual(data_type.values[0].identifier, "PARK")
+        self.assertEqual(data_type.values[0].value, 0)
+        self.assertEqual(data_type.values[1].identifier, "DRIVE")
+        self.assertEqual(data_type.values[1].value, 1)
 
     def test_prevents_in_place_literal_mutation(self) -> None:
         data_type = EnumDataType(
