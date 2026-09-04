@@ -20,6 +20,7 @@ py_library(
         "composite.py",
         "cpp.py",
         "enum.py",
+        "external.py",
         "franca.py",
         "map.py",
         "primitives.py",
