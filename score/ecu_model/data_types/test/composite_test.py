@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.composite import CompositeDataType, DataTypeField
+from score.ecu_model.data_types.enum import EnumDataType
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
 from score.ecu_model.ecu_model import EcuModel, EcuModelRef
@@ -117,6 +118,16 @@ class TestCompositeDataType(unittest.TestCase):
                 identifier="Position",
                 source_kind=DataTypeSource.PROTOBUF,
                 extends={"target_id": parent.id},
+            )
+
+    def test_rejects_extending_base_type_of_different_kind(self) -> None:
+        parent_enum = EnumDataType(identifier="BaseEnum", source_kind=DataTypeSource.FRANCA)
+
+        with self.assertRaisesRegex(ValidationError, "can only extend another data type of kind 'struct'"):
+            StructDataType(
+                identifier="ChildStruct",
+                source_kind=DataTypeSource.FRANCA,
+                extends={"target_id": parent_enum.id},
             )
 
 

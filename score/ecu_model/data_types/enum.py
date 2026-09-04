@@ -23,7 +23,7 @@ from score.ecu_model.data_types.common import (
     ValidationInfo,
 )
 from score.ecu_model.data_types.primitives import PrimitiveDataType
-from score.ecu_model.ecu_model import EcuModelElement, EcuModelRef
+from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
 
 
 class EnumValue(EcuModelElement):
@@ -114,9 +114,17 @@ class EnumDataType(DataTypeBase):
 
     @field_validator("extends")
     @classmethod
-    def _validate_inheritence(cls, extends: DataTypeRef | None, info: ValidationInfo) -> DataTypeRef | None:
-        """Validate the enum inheritance according to their enclosing source language."""
-        source_kind = info.data.get("source_kind")
-        if source_kind != DataTypeSource.FRANCA and extends is not None:
-            raise ValueError(f"Enum inheritance is only allowed for FRANCA source kind, but got {source_kind}")
+    def _validate_inheritance(cls, extends: DataTypeRef | None, info: ValidationInfo) -> DataTypeRef | None:
+        """Validate the enum inheritance according to their enclosing source language and kind."""
+        if extends is not None:
+            source_kind = info.data.get("source_kind")
+            if source_kind != DataTypeSource.FRANCA:
+                raise ValueError(f"Enum inheritance is only allowed for FRANCA source kind, but got {source_kind}")
+            if extends.target_id in EcuModel.model_registry:
+                base_type = extends.resolve()
+                if base_type.kind != DataTypeKind.ENUM:
+                    raise ValueError(
+                        f"EnumDataType can only extend another enum data type, "
+                        f"but referenced base type '{extends.target_id}' is of kind '{base_type.kind}'"
+                    )
         return extends

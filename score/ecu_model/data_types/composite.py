@@ -22,7 +22,7 @@ from score.ecu_model.data_types.common import (
     DataTypeSource,
     TypeRef,
 )
-from score.ecu_model.ecu_model import EcuModelElement, EcuModelRef
+from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
 
 
 class DataTypeField(EcuModelElement):
@@ -121,11 +121,20 @@ class CompositeDataType(DataTypeBase):
 
     @field_validator("extends")
     @classmethod
-    def _validate_inheritence(cls, extends: DataTypeRef | None, info: ValidationInfo) -> DataTypeRef | None:
-        """Validate the inheritance according to their enclosing source language."""
-        source_kind = info.data.get("source_kind")
-        if source_kind != DataTypeSource.FRANCA and extends is not None:
-            raise ValueError(
-                f"{cls.__name__} inheritance is only allowed for FRANCA source kind, but got {source_kind}"
-            )
+    def _validate_inheritance(cls, extends: DataTypeRef | None, info: ValidationInfo) -> DataTypeRef | None:
+        """Validate the inheritance according to their enclosing source language and kind."""
+        if extends is not None:
+            source_kind = info.data.get("source_kind")
+            if source_kind != DataTypeSource.FRANCA:
+                raise ValueError(
+                    f"{cls.__name__} inheritance is only allowed for FRANCA source kind, but got {source_kind}"
+                )
+            if extends.target_id in EcuModel.model_registry:
+                base_type = extends.resolve()
+                expected_kind = info.data.get("kind")
+                if base_type.kind != expected_kind:
+                    raise ValueError(
+                        f"{cls.__name__} can only extend another data type of kind '{expected_kind}', "
+                        f"but referenced base type '{extends.target_id}' is of kind '{base_type.kind}'"
+                    )
         return extends

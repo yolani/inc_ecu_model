@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
 from score.ecu_model.data_types.enum import EnumDataType, EnumValue
 from score.ecu_model.data_types.primitives import PrimitiveDataType
+from score.ecu_model.data_types.struct import StructDataType
 from score.ecu_model.ecu_model import EcuModelRef
 
 
@@ -99,6 +100,16 @@ class TestEnumDataType(unittest.TestCase):
         )
 
         self.assertIs(child.extends.resolve(), parent)
+
+    def test_rejects_extending_base_type_of_different_kind(self) -> None:
+        parent_struct = StructDataType(identifier="BaseStruct", source_kind=DataTypeSource.FRANCA)
+
+        with self.assertRaisesRegex(ValidationError, "can only extend another enum data type"):
+            EnumDataType(
+                identifier="ChildEnum",
+                source_kind=DataTypeSource.FRANCA,
+                extends=DataTypeRef(target_id=parent_struct.id),
+            )
 
     def test_rejects_boolean_literal_values(self) -> None:
         with self.assertRaises(ValidationError):
