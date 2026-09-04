@@ -23,10 +23,10 @@ from score.ecu_model.data_types.common import (
     ValidationInfo,
 )
 from score.ecu_model.data_types.primitives import PrimitiveDataType
-from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
+from score.ecu_model.model import ModelElement, ModelRef, ModelRegistry
 
 
-class EnumValue(EcuModelElement):
+class EnumValue(ModelElement):
     """A named enum literal with an optional numeric value."""
 
     model_config = ConfigDict(frozen=True)
@@ -68,16 +68,14 @@ class EnumDataType(DataTypeBase):
         default=PrimitiveDataType.UINT32,
         description="Primitive type used for enum storage",
     )
-    values: tuple[EcuModelRef, ...] = Field(
+    values: tuple[ModelRef, ...] = Field(
         default_factory=tuple,
         description="References to named enum literals, not changeable after creation",
     )
 
     @field_validator("values")
     @classmethod
-    def _validate_value_identifiers(
-        cls, values: tuple[EcuModelRef, ...], info: ValidationInfo
-    ) -> tuple[EcuModelRef, ...]:
+    def _validate_value_identifiers(cls, values: tuple[ModelRef, ...], info: ValidationInfo) -> tuple[ModelRef, ...]:
         """Validate enum literals according to their enclosing source language."""
         source_kind = info.data.get("source_kind")
         if source_kind is None:
@@ -99,7 +97,7 @@ class EnumDataType(DataTypeBase):
 
     @field_validator("values")
     @classmethod
-    def _validate_value_definitions(cls, values: tuple[EcuModelRef, ...]) -> tuple[EcuModelRef, ...]:
+    def _validate_value_definitions(cls, values: tuple[ModelRef, ...]) -> tuple[ModelRef, ...]:
         """Validate enum literal value definitions and uniqueness."""
         enum_values = tuple(value_ref.resolve() for value_ref in values)
         has_explicit_values = any(enum_value.value is not None for enum_value in enum_values)
@@ -122,7 +120,7 @@ class EnumDataType(DataTypeBase):
             source_kind = info.data.get("source_kind")
             if source_kind != DataTypeSource.FRANCA:
                 raise ValueError(f"Enum inheritance is only allowed for FRANCA source kind, but got {source_kind}")
-            if extends.target_id in EcuModel.model_registry:
+            if extends.target_id in ModelRegistry.elements:
                 base_type = extends.resolve()
                 if base_type.kind != DataTypeKind.ENUM:
                     raise ValueError(

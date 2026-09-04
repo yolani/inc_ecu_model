@@ -25,7 +25,7 @@ from score.ecu_model.data_types.protobuf import (
     PROTOBUF_PACKAGE_PATTERN,
     PROTOBUF_SEPARATOR,
 )
-from score.ecu_model.ecu_model import EcuModelElement, EcuModelRef
+from score.ecu_model.model import ModelElement, ModelRef
 
 
 class DataTypeKind(str, Enum):
@@ -62,7 +62,7 @@ class DataTypeSource(str, Enum):
         return self.value
 
 
-class DataTypeBase(EcuModelElement):
+class DataTypeBase(ModelElement):
     """Shared metadata for data types that are declared in a source language."""
 
     kind: DataTypeKind = Field(
@@ -162,7 +162,7 @@ class DataTypeBase(EcuModelElement):
         return f"{self.namespace}{separator}{self.identifier}"
 
 
-class DataTypeRef(EcuModelRef):
+class DataTypeRef(ModelRef):
     """Reference to a declared data type definition by its unique model identifier."""
 
     def resolve(self) -> DataTypeBase:

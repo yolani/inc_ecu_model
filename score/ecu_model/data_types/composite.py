@@ -22,10 +22,10 @@ from score.ecu_model.data_types.common import (
     DataTypeSource,
     TypeRef,
 )
-from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
+from score.ecu_model.model import ModelElement, ModelRef, ModelRegistry
 
 
-class DataTypeField(EcuModelElement):
+class DataTypeField(ModelElement):
     """A named member of a composite data type, e.g. a struct."""
 
     identifier: str = Field(
@@ -69,7 +69,7 @@ class CompositeDataType(DataTypeBase):
         default=None,
         description="Optional data type definition extended by this data type",
     )
-    fields: tuple[EcuModelRef, ...] = Field(
+    fields: tuple[ModelRef, ...] = Field(
         default_factory=tuple,
         description="References to the fields in source declaration order, not changeable after creation",
     )
@@ -82,9 +82,7 @@ class CompositeDataType(DataTypeBase):
 
     @field_validator("fields")
     @classmethod
-    def _validate_field_identifiers(
-        cls, fields: tuple[EcuModelRef, ...], info: ValidationInfo
-    ) -> tuple[EcuModelRef, ...]:
+    def _validate_field_identifiers(cls, fields: tuple[ModelRef, ...], info: ValidationInfo) -> tuple[ModelRef, ...]:
         """Validate the field identifiers according to their enclosing source language."""
         source_kind = info.data.get("source_kind")
         if source_kind is None:
@@ -106,7 +104,7 @@ class CompositeDataType(DataTypeBase):
 
     @field_validator("fields")
     @classmethod
-    def _validate_field_definitions(cls, fields: tuple[EcuModelRef, ...]) -> tuple[EcuModelRef, ...]:
+    def _validate_field_definitions(cls, fields: tuple[ModelRef, ...]) -> tuple[ModelRef, ...]:
         """Validate field definitions and uniqueness."""
         resolved_fields = tuple(field_ref.resolve() for field_ref in fields)
         has_explicit_numbers = any(field.field_number is not None for field in resolved_fields)
@@ -131,7 +129,7 @@ class CompositeDataType(DataTypeBase):
                 raise ValueError(
                     f"{cls.__name__} inheritance is only allowed for FRANCA source kind, but got {source_kind}"
                 )
-            if extends.target_id in EcuModel.model_registry:
+            if extends.target_id in ModelRegistry.elements:
                 base_type = extends.resolve()
                 expected_kind = info.data.get("kind")
                 if base_type.kind != expected_kind:

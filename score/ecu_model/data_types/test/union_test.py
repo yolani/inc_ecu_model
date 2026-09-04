@@ -19,7 +19,7 @@ from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTyp
 from score.ecu_model.data_types.composite import DataTypeField
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.union import UnionDataType
-from score.ecu_model.ecu_model import EcuModelRef
+from score.ecu_model.model import ModelRef
 
 
 class TestUnionDataType(unittest.TestCase):
@@ -29,14 +29,14 @@ class TestUnionDataType(unittest.TestCase):
         data_type: PrimitiveDataType | DataTypeRef = PrimitiveDataType.UINT32,
         field_number: int | None = None,
         optional: bool = False,
-    ) -> EcuModelRef:
+    ) -> ModelRef:
         field = DataTypeField(
             identifier=identifier,
             data_type=data_type,
             field_number=field_number,
             optional=optional,
         )
-        return EcuModelRef(target_id=field.id)
+        return ModelRef(target_id=field.id)
 
     def test_keeps_declared_fields_in_order(self) -> None:
         data_type = UnionDataType(

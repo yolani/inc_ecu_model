@@ -15,7 +15,7 @@ load("@rules_python//python:defs.bzl", "py_library")
 py_library(
     name = "ecu_model",
     srcs = [
-        "ecu_model.py",
+        "model.py",
     ],
     visibility = ["//visibility:public"],
     deps = ["@score_ecu_model_pip//pydantic"],

@@ -23,15 +23,15 @@ from pydantic import (
 )
 
 
-class EcuModel(BaseModel):
+class ModelRegistry(BaseModel):
     """
-    This class provides a registry for instances of EcuModelElement. All objects of type EcuModelElement are
+    This class provides a registry for instances of ModelElement. All objects of type ModelElement are
     automatically tracked in the registry to ensure uniqueness and to make them resolvable by their identifier for the
     whole lifetime of the process.
     Future extensions, additional post-initialization, validation, etc. actions can be implemented here.
     """
 
-    model_registry: ClassVar[dict[UUID, "EcuModelElement"]] = {}
+    elements: ClassVar[dict[UUID, "ModelElement"]] = {}
 
     def model_post_init(self, context: Any, /) -> None:
         """
@@ -43,29 +43,29 @@ class EcuModel(BaseModel):
             context: Additional context for post-initialization actions.
 
         Raises:
-            TypeError: If the instance is neither the root EcuModel nor an EcuModelElement.
+            TypeError: If the instance is neither the root ModelRegistry nor a ModelElement.
             ValueError: If an instance with the same ID already exists in the registry.
         """
-        if type(self) is EcuModel:
-            # The root object of a model is not itself tracked in the registry.
+        if type(self) is ModelRegistry:
+            # The registry root itself is not tracked in the registry.
             return
-        if not isinstance(self, EcuModelElement):
-            raise TypeError(f"Expected instance of EcuModelElement, got {type(self).__name__}")
-        if self.id in EcuModel.model_registry.keys():
+        if not isinstance(self, ModelElement):
+            raise TypeError(f"Expected instance of ModelElement, got {type(self).__name__}")
+        if self.id in ModelRegistry.elements.keys():
             raise ValueError(f"Duplicate instance {str(self)}")
-        EcuModel.model_registry[self.id] = self
+        ModelRegistry.elements[self.id] = self
 
     @classmethod
     def serialize(cls) -> bytes:
         """
-        Pickle the whole model registry, i.e. every registered EcuModelElement.
+        Pickle the whole registry, i.e. every registered ModelElement.
         """
-        return pickle.dumps(EcuModel.model_registry, protocol=pickle.HIGHEST_PROTOCOL)
+        return pickle.dumps(ModelRegistry.elements, protocol=pickle.HIGHEST_PROTOCOL)
 
     @classmethod
     def deserialize(cls, data: bytes) -> int:
         """
-        Replace the model registry with a previously serialized one and return the number of restored elements.
+        Replace the registry with a previously serialized one and return the number of restored elements.
 
         Args:
             data: Payload produced by serialize().
@@ -75,18 +75,18 @@ class EcuModel(BaseModel):
         """
         restored = pickle.loads(data)
         if not isinstance(restored, dict) or not all(
-            isinstance(key, UUID) and isinstance(value, EcuModelElement) for key, value in restored.items()
+            isinstance(key, UUID) and isinstance(value, ModelElement) for key, value in restored.items()
         ):
-            raise TypeError("Payload does not contain an EcuModel registry")
+            raise TypeError("Payload does not contain a ModelRegistry")
         # Replacing the contents rather than the dict itself keeps existing references to the registry valid.
-        EcuModel.model_registry.clear()
-        EcuModel.model_registry.update(restored)
-        return len(EcuModel.model_registry)
+        ModelRegistry.elements.clear()
+        ModelRegistry.elements.update(restored)
+        return len(ModelRegistry.elements)
 
 
-class EcuModelElement(EcuModel):
+class ModelElement(ModelRegistry):
     """
-    Base class to be used by all objects tracked in the EcuModel.model_registry.
+    Base class to be used by all objects tracked in ModelRegistry.elements.
     """
 
     """
@@ -109,9 +109,9 @@ class EcuModelElement(EcuModel):
         return f"{self.__class__.__name__}(id={self.id}, description={self.description})"
 
 
-class EcuModelRef(BaseModel):
+class ModelRef(BaseModel):
     """
-    Reference to a registered ECU model element by its unique model identifier.
+    Reference to a registered model element by its unique model identifier.
 
     References behave like the element they point to: attribute reads and writes are delegated to the target and
     a target element (or its identifier) may be assigned directly wherever a reference is expected. Referencing by
@@ -119,31 +119,31 @@ class EcuModelRef(BaseModel):
     """
 
     target_id: UUID = Field(
-        description="Identifier of the referenced ECU model element",
+        description="Identifier of the referenced model element",
     )
 
     @model_validator(mode="before")
     @classmethod
     def _accept_element_or_identifier(cls, value: Any) -> Any:
         """Accept a model element or a bare identifier in place of an explicit reference payload."""
-        if isinstance(value, EcuModelElement):
+        if isinstance(value, ModelElement):
             return {"target_id": value.id}
         if isinstance(value, UUID):
             return {"target_id": value}
         return value
 
-    def resolve(self) -> EcuModelElement:
+    def resolve(self) -> ModelElement:
         """
-        Look the referenced model element up in the EcuModel registry.
+        Look the referenced model element up in the registry.
 
         Resolution is deliberately lazy: a reference may be deserialized before its definition exists.
 
         Raises:
             KeyError: If no model element with the referenced identifier is registered.
         """
-        element = EcuModel.model_registry.get(self.target_id)
+        element = ModelRegistry.elements.get(self.target_id)
         if element is None:
-            raise KeyError(f"Unresolved ECU model reference {self.target_id}")
+            raise KeyError(f"Unresolved model reference {self.target_id}")
         return element
 
     def __getattr__(self, name: str) -> Any:

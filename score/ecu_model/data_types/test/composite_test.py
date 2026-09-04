@@ -20,18 +20,18 @@ from score.ecu_model.data_types.composite import CompositeDataType, DataTypeFiel
 from score.ecu_model.data_types.enum import EnumDataType
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
-from score.ecu_model.ecu_model import EcuModel, EcuModelRef
+from score.ecu_model.model import ModelRef, ModelRegistry
 
 
 class TestCompositeDataType(unittest.TestCase):
     @staticmethod
-    def _field_ref(identifier: str, field_number: int | None = None) -> EcuModelRef:
+    def _field_ref(identifier: str, field_number: int | None = None) -> ModelRef:
         field = DataTypeField(
             identifier=identifier,
             data_type=PrimitiveDataType.UINT32,
             field_number=field_number,
         )
-        return EcuModelRef(target_id=field.id)
+        return ModelRef(target_id=field.id)
 
     def test_rejects_direct_instantiation_of_the_abstract_base(self) -> None:
         with self.assertRaisesRegex(TypeError, "CompositeDataType is abstract"):
@@ -42,7 +42,7 @@ class TestCompositeDataType(unittest.TestCase):
             )
 
     def test_does_not_register_the_rejected_instance(self) -> None:
-        registered_elements = len(EcuModel.model_registry)
+        registered_elements = len(ModelRegistry.elements)
 
         with self.assertRaises(TypeError):
             CompositeDataType(
@@ -51,7 +51,7 @@ class TestCompositeDataType(unittest.TestCase):
                 source_kind=DataTypeSource.FRANCA,
             )
 
-        self.assertEqual(len(EcuModel.model_registry), registered_elements)
+        self.assertEqual(len(ModelRegistry.elements), registered_elements)
 
     def test_rejects_invalid_or_duplicate_field_identifiers(self) -> None:
         with self.assertRaisesRegex(ValidationError, "Invalid FRANCA field identifier '1field'"):

@@ -14,8 +14,8 @@
 load("@rules_python//python:defs.bzl", "py_test")
 
 py_test(
-    name = "ecu_model_test",
-    srcs = ["ecu_model_test.py"],
+    name = "model_test",
+    srcs = ["model_test.py"],
     deps = [
         "//score/ecu_model",
         "@score_ecu_model_pip//pydantic",

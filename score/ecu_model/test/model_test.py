@@ -17,103 +17,103 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from score.ecu_model.ecu_model import EcuModel, EcuModelElement
+from score.ecu_model.model import ModelElement, ModelRegistry
 
 
-class TestEcuModel(unittest.TestCase):
+class TestModelRegistry(unittest.TestCase):
     def test_root_instantiation_succeeds(self) -> None:
-        root = EcuModel()
-        self.assertIsInstance(root, EcuModel)
+        root = ModelRegistry()
+        self.assertIsInstance(root, ModelRegistry)
 
     def test_root_instance_is_not_registered(self) -> None:
-        root = EcuModel()
-        self.assertNotIn(root, EcuModel.model_registry.values())
+        root = ModelRegistry()
+        self.assertNotIn(root, ModelRegistry.elements.values())
 
 
-class TestEcuModelElement(unittest.TestCase):
+class TestModelElement(unittest.TestCase):
     def test_default_fields(self) -> None:
-        element = EcuModelElement()
+        element = ModelElement()
         self.assertIsInstance(element.id, UUID)
         self.assertEqual(element.description, "")
 
     def test_custom_description(self) -> None:
-        element = EcuModelElement(description="Another test element")
+        element = ModelElement(description="Another test element")
         self.assertEqual(element.description, "Another test element")
 
-    def test_registered_in_model_registry(self) -> None:
-        element = EcuModelElement()
-        self.assertIs(EcuModel.model_registry[element.id], element)
+    def test_registered_in_the_registry(self) -> None:
+        element = ModelElement()
+        self.assertIs(ModelRegistry.elements[element.id], element)
 
     def test_duplicate_id_raises_validation_error(self) -> None:
         shared_id = uuid4()
-        EcuModelElement(id=shared_id)
+        ModelElement(id=shared_id)
         with self.assertRaises(ValidationError):
-            EcuModelElement(id=shared_id)
+            ModelElement(id=shared_id)
 
     def test_str_representation(self) -> None:
-        element = EcuModelElement(description="desc")
-        self.assertEqual(str(element), f"EcuModelElement(id={element.id}, description=desc)")
+        element = ModelElement(description="desc")
+        self.assertEqual(str(element), f"ModelElement(id={element.id}, description=desc)")
 
     def test_assignment_is_validated(self) -> None:
-        element = EcuModelElement()
+        element = ModelElement()
         element.description = "updated"
         self.assertEqual(element.description, "updated")
 
     def test_invalid_assignment_raises_validation_error(self) -> None:
-        element = EcuModelElement()
+        element = ModelElement()
         with self.assertRaises(ValidationError):
             element.id = "not-a-uuid"
 
     def test_existing_instance_is_revalidated(self) -> None:
         # model_construct() bypasses validators, so this instance holds an invalid id undetected.
-        bypassed = EcuModelElement.model_construct(id="not-a-uuid", description="desc")
+        bypassed = ModelElement.model_construct(id="not-a-uuid", description="desc")
         with self.assertRaises(ValidationError):
-            EcuModelElement.model_validate(bypassed)
+            ModelElement.model_validate(bypassed)
 
 
 class TestSerialization(unittest.TestCase):
     def setUp(self) -> None:
-        self._saved_registry = dict(EcuModel.model_registry)
-        EcuModel.model_registry.clear()
+        self._saved_registry = dict(ModelRegistry.elements)
+        ModelRegistry.elements.clear()
 
     def tearDown(self) -> None:
-        EcuModel.model_registry.clear()
-        EcuModel.model_registry.update(self._saved_registry)
+        ModelRegistry.elements.clear()
+        ModelRegistry.elements.update(self._saved_registry)
 
     def test_round_trip_restores_all_elements(self) -> None:
-        elements = [EcuModelElement(description="first"), EcuModelElement(description="second")]
-        blob = EcuModel.serialize()
-        EcuModel.model_registry.clear()
+        elements = [ModelElement(description="first"), ModelElement(description="second")]
+        blob = ModelRegistry.serialize()
+        ModelRegistry.elements.clear()
 
-        self.assertEqual(EcuModel.deserialize(blob), 2)
+        self.assertEqual(ModelRegistry.deserialize(blob), 2)
         for element in elements:
-            restored = EcuModel.model_registry[element.id]
+            restored = ModelRegistry.elements[element.id]
             self.assertIsNot(restored, element)
             self.assertEqual(restored.description, element.description)
 
     def test_deserialize_detaches_pre_existing_instances(self) -> None:
-        original = EcuModelElement(description="original")
-        blob = EcuModel.serialize()
-        squatter = EcuModelElement(description="squatter")
-        EcuModel.model_registry[original.id] = squatter
+        original = ModelElement(description="original")
+        blob = ModelRegistry.serialize()
+        squatter = ModelElement(description="squatter")
+        ModelRegistry.elements[original.id] = squatter
 
-        EcuModel.deserialize(blob)
+        ModelRegistry.deserialize(blob)
 
-        restored = EcuModel.model_registry[original.id]
+        restored = ModelRegistry.elements[original.id]
         self.assertEqual(restored.description, "original")
         self.assertIsNot(restored, original)
 
     def test_deserialize_drops_elements_absent_from_the_payload(self) -> None:
-        blob = EcuModel.serialize()
-        orphan = EcuModelElement()
+        blob = ModelRegistry.serialize()
+        orphan = ModelElement()
 
-        EcuModel.deserialize(blob)
+        ModelRegistry.deserialize(blob)
 
-        self.assertNotIn(orphan.id, EcuModel.model_registry)
+        self.assertNotIn(orphan.id, ModelRegistry.elements)
 
     def test_malformed_payload_is_rejected(self) -> None:
         with self.assertRaises(TypeError):
-            EcuModel.deserialize(pickle.dumps({"not": "a registry"}))
+            ModelRegistry.deserialize(pickle.dumps({"not": "a registry"}))
 
 
 if __name__ == "__main__":

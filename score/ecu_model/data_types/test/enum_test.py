@@ -19,14 +19,14 @@ from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTyp
 from score.ecu_model.data_types.enum import EnumDataType, EnumValue
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
-from score.ecu_model.ecu_model import EcuModelRef
+from score.ecu_model.model import ModelRef
 
 
 class TestEnumDataType(unittest.TestCase):
     @staticmethod
-    def _value_ref(identifier: str, value: int | None = None) -> EcuModelRef:
+    def _value_ref(identifier: str, value: int | None = None) -> ModelRef:
         enum_value = EnumValue(identifier=identifier, value=value)
-        return EcuModelRef(target_id=enum_value.id)
+        return ModelRef(target_id=enum_value.id)
 
     def test_defaults_to_uint32_and_keeps_declared_literals(self) -> None:
         data_type = EnumDataType(

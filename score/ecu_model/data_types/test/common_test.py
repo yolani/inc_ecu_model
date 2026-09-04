@@ -25,7 +25,7 @@ from score.ecu_model.data_types.common import (
     TypeRef,
 )
 from score.ecu_model.data_types.primitives import PrimitiveDataType
-from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
+from score.ecu_model.model import ModelElement, ModelRef, ModelRegistry
 
 
 class StructMember(BaseModel):
@@ -166,7 +166,7 @@ class TestDataTypeRefResolution(unittest.TestCase):
             DataTypeRef(target_id=uuid4()).resolve()
 
     def test_reference_to_foreign_element_raises_type_error(self) -> None:
-        element = EcuModelElement()
+        element = ModelElement()
 
         with self.assertRaises(TypeError):
             DataTypeRef(target_id=element.id).resolve()
@@ -179,23 +179,23 @@ class TestDataTypeRefResolution(unittest.TestCase):
         self.assertIs(ref.resolve(), definition)
 
 
-class TestEcuModelRefResolution(unittest.TestCase):
+class TestModelRefResolution(unittest.TestCase):
     def test_resolves_registered_model_element(self) -> None:
-        element = EcuModelElement()
+        element = ModelElement()
 
-        self.assertIs(EcuModelRef(target_id=element.id).resolve(), element)
+        self.assertIs(ModelRef(target_id=element.id).resolve(), element)
 
 
 class TestPickleRoundTrip(unittest.TestCase):
     """Example: persist the whole type graph and make it resolvable again."""
 
     def setUp(self) -> None:
-        self._saved_registry = dict(EcuModel.model_registry)
-        EcuModel.model_registry.clear()
+        self._saved_registry = dict(ModelRegistry.elements)
+        ModelRegistry.elements.clear()
 
     def tearDown(self) -> None:
-        EcuModel.model_registry.clear()
-        EcuModel.model_registry.update(self._saved_registry)
+        ModelRegistry.elements.clear()
+        ModelRegistry.elements.update(self._saved_registry)
 
     @staticmethod
     def _build_type_graph() -> tuple[DataTypeBase, DataTypeBase]:
@@ -221,27 +221,27 @@ class TestPickleRoundTrip(unittest.TestCase):
 
     def test_references_resolve_again_after_round_trip(self) -> None:
         position, waypoint = self._build_type_graph()
-        blob = EcuModel.serialize()
-        EcuModel.model_registry.clear()  # simulate loading into a fresh process
+        blob = ModelRegistry.serialize()
+        ModelRegistry.elements.clear()  # simulate loading into a fresh process
 
-        self.assertEqual(EcuModel.deserialize(blob), 2)
+        self.assertEqual(ModelRegistry.deserialize(blob), 2)
 
-        restored_waypoint = EcuModel.model_registry[waypoint.id]
+        restored_waypoint = ModelRegistry.elements[waypoint.id]
         assert isinstance(restored_waypoint, StructDataType)
         member = restored_waypoint.members[0]
         assert isinstance(member.type, DataTypeRef)
 
-        self.assertIs(member.type.resolve(), EcuModel.model_registry[position.id])
+        self.assertIs(member.type.resolve(), ModelRegistry.elements[position.id])
         self.assertIsNot(member.type.resolve(), position)
 
     def test_round_trip_preserves_identifiers_and_primitive_members(self) -> None:
         position, _ = self._build_type_graph()
-        blob = EcuModel.serialize()
-        EcuModel.model_registry.clear()
+        blob = ModelRegistry.serialize()
+        ModelRegistry.elements.clear()
 
-        EcuModel.deserialize(blob)
+        ModelRegistry.deserialize(blob)
 
-        restored = EcuModel.model_registry[position.id]
+        restored = ModelRegistry.elements[position.id]
         assert isinstance(restored, StructDataType)
         self.assertEqual(restored.identifier, "Position")
         self.assertEqual(restored.members[0].type, PrimitiveDataType.FLOAT)

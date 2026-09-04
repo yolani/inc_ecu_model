@@ -17,7 +17,7 @@ from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTyp
 from score.ecu_model.data_types.composite import DataTypeField
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
-from score.ecu_model.ecu_model import EcuModelRef
+from score.ecu_model.model import ModelRef
 
 
 class TestStructDataType(unittest.TestCase):
@@ -26,9 +26,9 @@ class TestStructDataType(unittest.TestCase):
         identifier: str,
         data_type: PrimitiveDataType | DataTypeRef = PrimitiveDataType.UINT32,
         field_number: int | None = None,
-    ) -> EcuModelRef:
+    ) -> ModelRef:
         field = DataTypeField(identifier=identifier, data_type=data_type, field_number=field_number)
-        return EcuModelRef(target_id=field.id)
+        return ModelRef(target_id=field.id)
 
     def test_keeps_declared_fields_in_order(self) -> None:
         data_type = StructDataType(
