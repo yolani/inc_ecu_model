@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from score.ecu_model.data_types.array import ArrayDataType
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
 
 
@@ -26,7 +26,7 @@ class TestArrayDataType(unittest.TestCase):
         array_type = ArrayDataType(
             identifier="IntArray",
             source_kind=DataTypeSource.FRANCA,
-            data_type=PrimitiveType.INT32,
+            data_type=PrimitiveDataType.INT32,
             dimension_min=0,
             dimension_max=10,
         )
@@ -34,21 +34,21 @@ class TestArrayDataType(unittest.TestCase):
         self.assertEqual(array_type.kind, DataTypeKind.ARRAY)
         self.assertEqual(array_type.identifier, "IntArray")
         self.assertFalse(array_type.is_inline)
-        self.assertEqual(array_type.data_type, PrimitiveType.INT32)
+        self.assertEqual(array_type.data_type, PrimitiveDataType.INT32)
         self.assertEqual(array_type.dimension_min, 0)
         self.assertEqual(array_type.dimension_max, 10)
 
     def test_creates_inline_array_without_identifier(self) -> None:
         array_type = ArrayDataType(
             source_kind=DataTypeSource.FRANCA,
-            data_type=PrimitiveType.UINT8,
+            data_type=PrimitiveDataType.UINT8,
             is_inline=True,
             dimension_max=256,
         )
 
         self.assertIsNone(array_type.identifier)
         self.assertTrue(array_type.is_inline)
-        self.assertEqual(array_type.data_type, PrimitiveType.UINT8)
+        self.assertEqual(array_type.data_type, PrimitiveDataType.UINT8)
         self.assertEqual(array_type.dimension_max, 256)
         with self.assertRaisesRegex(ValueError, "Data types without an identifier do not have a fully qualified name"):
             _ = array_type.fully_qualified_name
@@ -58,7 +58,7 @@ class TestArrayDataType(unittest.TestCase):
             ArrayDataType(
                 identifier="BadInline",
                 source_kind=DataTypeSource.FRANCA,
-                data_type=PrimitiveType.UINT8,
+                data_type=PrimitiveDataType.UINT8,
                 is_inline=True,
             )
         self.assertIn("inline arrays must not have an identifier", str(ctx.exception))
@@ -67,7 +67,7 @@ class TestArrayDataType(unittest.TestCase):
         with self.assertRaises(ValidationError) as ctx:
             ArrayDataType(
                 source_kind=DataTypeSource.FRANCA,
-                data_type=PrimitiveType.UINT8,
+                data_type=PrimitiveDataType.UINT8,
                 is_inline=False,
             )
         self.assertIn("non-inline arrays require an identifier", str(ctx.exception))
@@ -77,7 +77,7 @@ class TestArrayDataType(unittest.TestCase):
             ArrayDataType(
                 identifier="NegativeBounds",
                 source_kind=DataTypeSource.FRANCA,
-                data_type=PrimitiveType.UINT8,
+                data_type=PrimitiveDataType.UINT8,
                 dimension_min=-1,
             )
         self.assertIn("array dimension bounds must be non-negative", str(ctx.exception))
@@ -87,7 +87,7 @@ class TestArrayDataType(unittest.TestCase):
             ArrayDataType(
                 identifier="BadRange",
                 source_kind=DataTypeSource.FRANCA,
-                data_type=PrimitiveType.UINT8,
+                data_type=PrimitiveDataType.UINT8,
                 dimension_min=10,
                 dimension_max=5,
             )

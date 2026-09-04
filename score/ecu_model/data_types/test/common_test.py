@@ -24,7 +24,7 @@ from score.ecu_model.data_types.common import (
     DataTypeSource,
     TypeRef,
 )
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.ecu_model import EcuModel, EcuModelElement, EcuModelRef
 
 
@@ -89,7 +89,7 @@ class TestTypeRef(unittest.TestCase):
     adapter = TypeAdapter(TypeRef)
 
     def test_primitive_is_referenced_by_canonical_name(self) -> None:
-        self.assertIs(self.adapter.validate_python("uint32"), PrimitiveType.UINT32)
+        self.assertIs(self.adapter.validate_python("uint32"), PrimitiveDataType.UINT32)
 
     def test_declared_type_is_referenced_by_identifier(self) -> None:
         target_id = uuid4()
@@ -103,7 +103,7 @@ class TestTypeRef(unittest.TestCase):
             self.adapter.validate_python("uint24")
 
     def test_round_trip_keeps_both_variants_distinguishable(self) -> None:
-        for ref in (PrimitiveType.UINT32, DataTypeRef(target_id=uuid4())):
+        for ref in (PrimitiveDataType.UINT32, DataTypeRef(target_id=uuid4())):
             with self.subTest(ref=ref):
                 dumped = self.adapter.dump_python(ref)
 
@@ -161,8 +161,8 @@ class TestPickleRoundTrip(unittest.TestCase):
             namespace="app.geometry",
             source_kind=DataTypeSource.FRANCA,
             members=[
-                StructMember(identifier="x", type=PrimitiveType.FLOAT),
-                StructMember(identifier="y", type=PrimitiveType.FLOAT),
+                StructMember(identifier="x", type=PrimitiveDataType.FLOAT),
+                StructMember(identifier="y", type=PrimitiveDataType.FLOAT),
             ],
         )
         waypoint = StructDataType(
@@ -171,7 +171,7 @@ class TestPickleRoundTrip(unittest.TestCase):
             source_kind=DataTypeSource.FRANCA,
             members=[
                 StructMember(identifier="position", type=DataTypeRef(target_id=position.id)),
-                StructMember(identifier="index", type=PrimitiveType.UINT32),
+                StructMember(identifier="index", type=PrimitiveDataType.UINT32),
             ],
         )
         return position, waypoint
@@ -201,7 +201,7 @@ class TestPickleRoundTrip(unittest.TestCase):
         restored = EcuModel.model_registry[position.id]
         assert isinstance(restored, StructDataType)
         self.assertEqual(restored.identifier, "Position")
-        self.assertEqual(restored.members[0].type, PrimitiveType.FLOAT)
+        self.assertEqual(restored.members[0].type, PrimitiveDataType.FLOAT)
 
 
 if __name__ == "__main__":

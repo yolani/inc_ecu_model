@@ -15,7 +15,7 @@ import unittest
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
 from score.ecu_model.data_types.composite import DataTypeField
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
 from score.ecu_model.ecu_model import EcuModelRef
 
@@ -24,7 +24,7 @@ class TestStructDataType(unittest.TestCase):
     @staticmethod
     def _field_ref(
         identifier: str,
-        data_type: PrimitiveType | DataTypeRef = PrimitiveType.UINT32,
+        data_type: PrimitiveDataType | DataTypeRef = PrimitiveDataType.UINT32,
         field_number: int | None = None,
     ) -> EcuModelRef:
         field = DataTypeField(identifier=identifier, data_type=data_type, field_number=field_number)
@@ -43,7 +43,7 @@ class TestStructDataType(unittest.TestCase):
         self.assertEqual(data_type.fields[1].resolve().identifier, "y")
 
     def test_defaults_to_a_required_field_without_wire_tag(self) -> None:
-        field = DataTypeField(identifier="x", data_type=PrimitiveType.UINT32)
+        field = DataTypeField(identifier="x", data_type=PrimitiveDataType.UINT32)
 
         self.assertIsNone(field.field_number)
         self.assertFalse(field.optional)

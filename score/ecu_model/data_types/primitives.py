@@ -14,7 +14,7 @@
 from enum import Enum
 
 
-class PrimitiveType(str, Enum):
+class PrimitiveDataType(str, Enum):
     """
     Canonical primitive data types supported by generator inputs, compilers, and other tools.
     Everything that is expected to be available without an explicit declaration in the source model.

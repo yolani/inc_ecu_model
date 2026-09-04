@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
 from score.ecu_model.data_types.enum import EnumDataType, EnumValue
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.ecu_model import EcuModelRef
 
 
@@ -35,7 +35,7 @@ class TestEnumDataType(unittest.TestCase):
         )
 
         self.assertEqual(data_type.kind, DataTypeKind.ENUM)
-        self.assertEqual(data_type.underlying_type, PrimitiveType.UINT32)
+        self.assertEqual(data_type.underlying_type, PrimitiveDataType.UINT32)
         self.assertIsInstance(data_type.values, tuple)
         self.assertEqual(data_type.values[0].resolve().value, 0)
         self.assertEqual(data_type.values[1].resolve().value, 1)

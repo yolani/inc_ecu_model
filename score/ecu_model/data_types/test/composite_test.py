@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.composite import CompositeDataType, DataTypeField
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
 from score.ecu_model.ecu_model import EcuModel, EcuModelRef
 
@@ -27,7 +27,7 @@ class TestCompositeDataType(unittest.TestCase):
     def _field_ref(identifier: str, field_number: int | None = None) -> EcuModelRef:
         field = DataTypeField(
             identifier=identifier,
-            data_type=PrimitiveType.UINT32,
+            data_type=PrimitiveDataType.UINT32,
             field_number=field_number,
         )
         return EcuModelRef(target_id=field.id)
@@ -86,10 +86,10 @@ class TestCompositeDataType(unittest.TestCase):
 
     def test_rejects_invalid_field_numbers(self) -> None:
         with self.assertRaisesRegex(ValidationError, "field number must be positive"):
-            DataTypeField(identifier="field", data_type=PrimitiveType.UINT32, field_number=0)
+            DataTypeField(identifier="field", data_type=PrimitiveDataType.UINT32, field_number=0)
 
         with self.assertRaisesRegex(ValidationError, "field number must be an integer, not boolean"):
-            DataTypeField(identifier="field", data_type=PrimitiveType.UINT32, field_number=True)
+            DataTypeField(identifier="field", data_type=PrimitiveDataType.UINT32, field_number=True)
 
     def test_revalidates_fields_on_assignment(self) -> None:
         data_type = StructDataType(

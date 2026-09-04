@@ -19,7 +19,7 @@ from pydantic import Field, FilePath, ValidationInfo, field_validator
 
 from score.ecu_model.data_types.cpp import CPP_IDENTIFIER_PATTERN, CPP_NAMESPACE_PATTERN, CPP_SEPARATOR
 from score.ecu_model.data_types.franca import FRANCA_IDENTIFIER_PATTERN, FRANCA_PACKAGE_PATTERN, FRANCA_SEPARATOR
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.protobuf import (
     PROTOBUF_IDENTIFIER_PATTERN,
     PROTOBUF_PACKAGE_PATTERN,
@@ -157,4 +157,4 @@ class DataTypeRef(EcuModelRef):
 
 
 # Use site of a data type: either a builtin primitive or a reference to a declared definition.
-TypeRef = PrimitiveType | DataTypeRef
+TypeRef = PrimitiveDataType | DataTypeRef

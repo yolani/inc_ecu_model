@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
 from score.ecu_model.data_types.composite import DataTypeField
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.union import UnionDataType
 from score.ecu_model.ecu_model import EcuModelRef
 
@@ -26,7 +26,7 @@ class TestUnionDataType(unittest.TestCase):
     @staticmethod
     def _field_ref(
         identifier: str,
-        data_type: PrimitiveType | DataTypeRef = PrimitiveType.UINT32,
+        data_type: PrimitiveDataType | DataTypeRef = PrimitiveDataType.UINT32,
         field_number: int | None = None,
         optional: bool = False,
     ) -> EcuModelRef:

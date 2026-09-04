@@ -19,10 +19,10 @@ from score.ecu_model.data_types.common import (
     DataTypeBase,
     DataTypeKind,
     DataTypeRef,
-    PrimitiveType,
-    ValidationInfo,
     DataTypeSource,
+    ValidationInfo,
 )
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.ecu_model import EcuModelElement, EcuModelRef
 
 
@@ -64,8 +64,8 @@ class EnumDataType(DataTypeBase):
         default=None,
         description="Optional enum definition extended by this enum",
     )
-    underlying_type: PrimitiveType = Field(
-        default=PrimitiveType.UINT32,
+    underlying_type: PrimitiveDataType = Field(
+        default=PrimitiveDataType.UINT32,
         description="Primitive type used for enum storage",
     )
     values: tuple[EcuModelRef, ...] = Field(

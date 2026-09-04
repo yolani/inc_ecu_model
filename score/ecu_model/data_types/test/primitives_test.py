@@ -13,20 +13,20 @@
 
 import unittest
 
-from score.ecu_model.data_types.primitives import PrimitiveType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
 
 
-class TestPrimitiveType(unittest.TestCase):
+class TestPrimitiveDataType(unittest.TestCase):
     def test_value_is_canonical_name(self) -> None:
-        self.assertEqual(PrimitiveType.UINT32.value, "uint32")
-        self.assertEqual(str(PrimitiveType.UINT32), "uint32")
+        self.assertEqual(PrimitiveDataType.UINT32.value, "uint32")
+        self.assertEqual(str(PrimitiveDataType.UINT32), "uint32")
 
     def test_parsed_from_canonical_name(self) -> None:
-        self.assertIs(PrimitiveType("uint32"), PrimitiveType.UINT32)
+        self.assertIs(PrimitiveDataType("uint32"), PrimitiveDataType.UINT32)
 
     def test_unknown_name_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
-            PrimitiveType("uint24")
+            PrimitiveDataType("uint24")
 
 
 if __name__ == "__main__":
