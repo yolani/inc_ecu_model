@@ -109,6 +109,8 @@ class DataTypeBase(EcuModelElement):
     def _validate_name(cls, value: str, info: ValidationInfo) -> str:
         """Validate a type name according to the selected source-language identifier rules."""
         source_kind = info.data.get("source_kind")
+        if source_kind is None:
+            return value
         pattern, _, _ = cls._get_language_spec(source_kind)
         if not pattern.match(value):
             kind_name = getattr(source_kind, "name", str(source_kind))
@@ -126,6 +128,8 @@ class DataTypeBase(EcuModelElement):
             return value
 
         source_kind = info.data.get("source_kind")
+        if source_kind is None:
+            return value
         _, pattern, separator = cls._get_language_spec(source_kind)
         if not pattern.match(value):
             kind_name = getattr(source_kind, "name", str(source_kind))

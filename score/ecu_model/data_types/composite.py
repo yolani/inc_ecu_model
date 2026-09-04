@@ -87,6 +87,8 @@ class CompositeDataType(DataTypeBase):
     ) -> tuple[EcuModelRef, ...]:
         """Validate the field identifiers according to their enclosing source language."""
         source_kind = info.data.get("source_kind")
+        if source_kind is None:
+            return fields
         identifier_pattern, _, _ = cls._get_language_spec(source_kind)
         for field_ref in fields:
             field = field_ref.resolve()
