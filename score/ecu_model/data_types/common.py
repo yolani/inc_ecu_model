@@ -15,7 +15,7 @@ from enum import Enum
 import re
 from typing import Any
 
-from pydantic import Field, FilePath, ValidationInfo, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 
 from score.ecu_model.data_types.cpp import CPP_IDENTIFIER_PATTERN, CPP_NAMESPACE_PATTERN, CPP_SEPARATOR
 from score.ecu_model.data_types.franca import FRANCA_IDENTIFIER_PATTERN, FRANCA_PACKAGE_PATTERN, FRANCA_SEPARATOR
@@ -78,7 +78,7 @@ class DataTypeBase(EcuModelElement):
         default=None,
         description="Optional namespace/module/package in which this data type is declared",
     )
-    source_uri: FilePath | None = Field(
+    source_uri: str | None = Field(
         default=None,
         description="Optional source file path which this data type definition was imported from",
     )
@@ -133,6 +133,19 @@ class DataTypeBase(EcuModelElement):
                 f"Invalid {kind_name} namespace / package '{value}': must contain valid identifiers separated by {separator}"
             )
         return value
+
+    @field_validator("source_uri")
+    @classmethod
+    def _validate_source_uri(cls, value: str | None) -> str | None:
+        """Validate that source_uri is non-empty and contains no null bytes when provided."""
+        if value is None:
+            return value
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("source_uri must not be empty when provided")
+        if "\x00" in stripped:
+            raise ValueError("source_uri must not contain null bytes")
+        return stripped
 
     @property
     def fully_qualified_name(self) -> str:

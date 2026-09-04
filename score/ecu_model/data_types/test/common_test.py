@@ -62,10 +62,30 @@ class TestDataTypeBaseCommon(unittest.TestCase):
             kind=DataTypeKind.STRUCT,
             identifier="MyStruct",
             source_kind=DataTypeSource.FRANCA,
+            source_uri="some/relative/path.fidl",
             deployment_properties={"key": "value"},
         )
-        self.assertIsNone(data_type.source_uri)
+        self.assertEqual(data_type.source_uri, "some/relative/path.fidl")
         self.assertEqual(data_type.deployment_properties, {"key": "value"})
+
+    def test_rejects_empty_or_null_byte_source_uri(self) -> None:
+        with self.assertRaises(ValidationError) as ctx:
+            StructDataType(
+                kind=DataTypeKind.STRUCT,
+                identifier="MyStruct",
+                source_kind=DataTypeSource.FRANCA,
+                source_uri="   ",
+            )
+        self.assertIn("source_uri must not be empty", str(ctx.exception))
+
+        with self.assertRaises(ValidationError) as ctx:
+            StructDataType(
+                kind=DataTypeKind.STRUCT,
+                identifier="MyStruct",
+                source_kind=DataTypeSource.FRANCA,
+                source_uri="invalid\x00path",
+            )
+        self.assertIn("source_uri must not contain null bytes", str(ctx.exception))
 
     def test_rejects_direct_instantiation(self) -> None:
         with self.assertRaisesRegex(TypeError, "DataTypeBase is abstract"):
