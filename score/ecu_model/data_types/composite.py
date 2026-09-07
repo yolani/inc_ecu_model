@@ -20,6 +20,7 @@ from score.ecu_model.data_types.common import (
     DataTypeBase,
     DataTypeSource,
     DataType,
+    Identifier,
 )
 from score.ecu_model.model import ModelElement
 
@@ -27,7 +28,7 @@ from score.ecu_model.model import ModelElement
 class DataTypeField(ModelElement):
     """A named member of a composite data type, e.g. a struct."""
 
-    identifier: str = Field(
+    identifier: Identifier = Field(
         description="Identifier of the field in its declaring data type, validated in the using struct or union",
     )
     data_type: DataType = Field(
@@ -78,25 +79,6 @@ class CompositeDataType(DataTypeBase):
         if type(self) is CompositeDataType:
             raise TypeError("CompositeDataType is abstract, instantiate a concrete data type like StructDataType")
         super().model_post_init(context)
-
-    @field_validator("fields")
-    @classmethod
-    def _validate_field_identifiers(
-        cls, fields: tuple[DataTypeField, ...], info: ValidationInfo
-    ) -> tuple[DataTypeField, ...]:
-        """Validate the field identifiers according to their enclosing source language."""
-        source_kind = info.data.get("source_kind")
-        if source_kind is None:
-            return fields
-        identifier_pattern, _, _ = cls._get_language_spec(source_kind)
-        for field in fields:
-            if not identifier_pattern.match(field.identifier):
-                kind_name = getattr(source_kind, "name", str(source_kind))
-                raise ValueError(
-                    f"Invalid {kind_name} field identifier '{field.identifier}': "
-                    "must start with a letter or underscore, followed by letters, digits or underscores"
-                )
-        return fields
 
     @field_validator("fields")
     @classmethod

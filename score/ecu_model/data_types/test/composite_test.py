@@ -53,7 +53,7 @@ class TestCompositeDataType(unittest.TestCase):
         self.assertEqual(len(ModelRegistry.elements), registered_elements)
 
     def test_rejects_invalid_or_duplicate_field_identifiers(self) -> None:
-        with self.assertRaisesRegex(ValidationError, "Invalid FRANCA field identifier '1field'"):
+        with self.assertRaisesRegex(ValidationError, "Invalid identifier '1field'"):
             StructDataType(
                 identifier="Position",
                 source_kind=DataTypeSource.FRANCA,

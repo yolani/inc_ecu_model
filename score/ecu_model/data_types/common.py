@@ -12,19 +12,12 @@
 # *******************************************************************************
 
 from enum import Enum
-import re
 from typing import Any
 
-from pydantic import Field, ValidationInfo, field_validator
+from pydantic import Field, field_validator, model_validator
 
-from score.ecu_model.data_types.cpp import CPP_IDENTIFIER_PATTERN, CPP_NAMESPACE_PATTERN, CPP_SEPARATOR
-from score.ecu_model.data_types.franca import FRANCA_IDENTIFIER_PATTERN, FRANCA_PACKAGE_PATTERN, FRANCA_SEPARATOR
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.primitives import PrimitiveDataType
-from score.ecu_model.data_types.protobuf import (
-    PROTOBUF_IDENTIFIER_PATTERN,
-    PROTOBUF_PACKAGE_PATTERN,
-    PROTOBUF_SEPARATOR,
-)
 from score.ecu_model.model import ModelElement
 
 
@@ -49,9 +42,7 @@ class DataTypeKind(str, Enum):
 
 
 class DataTypeSource(str, Enum):
-    """
-    IDL (Interface Definition Language) from which the data type originates.
-    """
+    """IDL (Interface Definition Language) from which the data type originates."""
 
     FRANCA = "franca"
     PROTOBUF = "protobuf"
@@ -71,12 +62,8 @@ class DataTypeBase(ModelElement):
     source_kind: DataTypeSource = Field(
         description="Origin of the data type definition, e.g. franca, protobuf, etc.",
     )
-    identifier: str = Field(
-        description="Identifier of the data type definition in its source namespace",
-    )
-    namespace: str | None = Field(
-        default=None,
-        description="Optional namespace/module/package in which this data type is declared",
+    name: Identifier | FullyQualifiedName = Field(
+        description="Identifier of the data type, optionally qualified by its enclosing namespace",
     )
     source_uri: str | None = Field(
         default=None,
@@ -93,50 +80,44 @@ class DataTypeBase(ModelElement):
             raise TypeError("DataTypeBase is abstract, instantiate a concrete data type")
         super().model_post_init(context)
 
+    @model_validator(mode="before")
     @classmethod
-    def _get_language_spec(cls, source_kind: DataTypeSource) -> tuple[re.Pattern[str], re.Pattern[str], str]:
-        """Return (identifier_pattern, namespace_pattern and separator) for the given source kind."""
+    def _combine_identifier_and_namespace(cls, data: Any) -> Any:
+        """Accept separate identifier/namespace constructor kwargs and combine them into `name`."""
+        if not isinstance(data, dict) or ("identifier" not in data and "namespace" not in data):
+            return data
+        identifier = data.pop("identifier", None)
+        namespace = data.pop("namespace", None)
+        if namespace is None:
+            data["name"] = identifier
+            return data
+        if identifier is None:
+            raise ValueError("namespace requires an identifier")
+        source_kind = data.get("source_kind")
+        if source_kind is None:
+            source_kind_field = cls.model_fields.get("source_kind")
+            source_kind = source_kind_field.default if source_kind_field is not None else None
+        segments = (
+            tuple(Identifier(segment) for segment in namespace.split(cls._get_separator(source_kind)))
+            if isinstance(namespace, str)
+            else tuple(namespace)
+        )
+        data["name"] = FullyQualifiedName(
+            identifier=identifier if isinstance(identifier, Identifier) else Identifier(identifier),
+            namespace=segments,
+        )
+        return data
+
+    @classmethod
+    def _get_separator(cls, source_kind: DataTypeSource) -> str:
+        """Return the namespace separator used by the given source kind."""
         if source_kind == DataTypeSource.FRANCA:
-            return FRANCA_IDENTIFIER_PATTERN, FRANCA_PACKAGE_PATTERN, FRANCA_SEPARATOR
+            return "."
         if source_kind == DataTypeSource.PROTOBUF:
-            return PROTOBUF_IDENTIFIER_PATTERN, PROTOBUF_PACKAGE_PATTERN, PROTOBUF_SEPARATOR
+            return "."
         if source_kind == DataTypeSource.CPP_HEADER_FILE:
-            return CPP_IDENTIFIER_PATTERN, CPP_NAMESPACE_PATTERN, CPP_SEPARATOR
+            return "::"
         raise ValueError(f"Unsupported data type source kind: {source_kind}")
-
-    @field_validator("identifier")
-    @classmethod
-    def _validate_name(cls, value: str, info: ValidationInfo) -> str:
-        """Validate a type name according to the selected source-language identifier rules."""
-        source_kind = info.data.get("source_kind")
-        if source_kind is None:
-            return value
-        pattern, _, _ = cls._get_language_spec(source_kind)
-        if not pattern.match(value):
-            kind_name = getattr(source_kind, "name", str(source_kind))
-            raise ValueError(
-                f"Invalid {kind_name} identifier '{value}': must start with a letter or underscore, "
-                "followed by letters, digits or underscores"
-            )
-        return value
-
-    @field_validator("namespace")
-    @classmethod
-    def _validate_namespace(cls, value: str | None, info: ValidationInfo) -> str | None:
-        """Validate a namespace/package path according to the selected source-language rules."""
-        if value is None:
-            return value
-
-        source_kind = info.data.get("source_kind")
-        if source_kind is None:
-            return value
-        _, pattern, separator = cls._get_language_spec(source_kind)
-        if not pattern.match(value):
-            kind_name = getattr(source_kind, "name", str(source_kind))
-            raise ValueError(
-                f"Invalid {kind_name} namespace / package '{value}': must contain valid identifiers separated by {separator}"
-            )
-        return value
 
     @field_validator("source_uri")
     @classmethod
@@ -152,14 +133,25 @@ class DataTypeBase(ModelElement):
         return stripped
 
     @property
+    def identifier(self) -> Identifier | None:
+        """Return the local identifier, independent of any enclosing namespace."""
+        if self.name is None:
+            return None
+        return self.name.identifier if isinstance(self.name, FullyQualifiedName) else self.name
+
+    @property
+    def namespace(self) -> tuple[Identifier, ...] | None:
+        """Return the enclosing namespace segments, or None if the name is unqualified."""
+        return self.name.namespace if isinstance(self.name, FullyQualifiedName) else None
+
+    @property
     def fully_qualified_name(self) -> str:
         """Return the fully qualified name combining namespace and identifier."""
-        if self.identifier is None:
+        if self.name is None:
             raise ValueError("Data types without an identifier do not have a fully qualified name")
-        if not self.namespace:
-            return self.identifier
-        _, _, separator = self._get_language_spec(self.source_kind)
-        return f"{self.namespace}{separator}{self.identifier}"
+        if isinstance(self.name, FullyQualifiedName):
+            return self.name.render(self._get_separator(self.source_kind))
+        return str(self.name)
 
 
 # Use site of a data type: either a builtin primitive or a direct reference to a declared definition.

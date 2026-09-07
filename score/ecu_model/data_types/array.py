@@ -14,16 +14,16 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, ValidationInfo, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataType
+from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataType, FullyQualifiedName, Identifier
 
 
 class ArrayDataType(DataTypeBase):
     """Definition of an array data type with element type and optional dimensions."""
 
     kind: Literal[DataTypeKind.ARRAY] = Field(default=DataTypeKind.ARRAY, frozen=True)
-    identifier: str | None = Field(
+    name: Identifier | FullyQualifiedName | None = Field(
         default=None,
         description="Identifier of a named array definition in its source namespace; absent for inline arrays",
     )
@@ -43,17 +43,6 @@ class ArrayDataType(DataTypeBase):
         description="Maximum dimension bound",
     )
 
-    @field_validator("identifier")
-    @classmethod
-    def _validate_optional_name(cls, value: str | None, info: ValidationInfo) -> str | None:
-        """
-        Validate identifier using parent validator when provided.
-        Overwrites the parent class's _validate_name method to allow None for inline arrays.
-        """
-        if value is None:
-            return value
-        return cls._validate_name(value, info)
-
     @field_validator("dimension_min", "dimension_max")
     @classmethod
     def _validate_dimension_bound_is_non_negative(cls, value: int | None) -> int | None:
@@ -67,8 +56,6 @@ class ArrayDataType(DataTypeBase):
         """Validate array naming and dimension constraints."""
         if self.is_inline and self.identifier is not None:
             raise ValueError("inline arrays must not have an identifier")
-        if self.is_inline and self.namespace is not None:
-            raise ValueError("inline arrays must not have a namespace")
         if not self.is_inline and self.identifier is None:
             raise ValueError("non-inline arrays require an identifier")
         if (

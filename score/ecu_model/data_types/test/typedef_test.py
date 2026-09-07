@@ -28,7 +28,7 @@ class TestTypedefDataType(unittest.TestCase):
         )
 
         self.assertEqual(typedef.kind, DataTypeKind.TYPEDEF)
-        self.assertEqual(typedef.identifier, "UserId")
+        self.assertEqual(str(typedef.identifier), "UserId")
         self.assertEqual(typedef.data_type, PrimitiveDataType.UINT64)
 
     def test_supports_declared_type_ref_as_aliased_data_type(self) -> None:

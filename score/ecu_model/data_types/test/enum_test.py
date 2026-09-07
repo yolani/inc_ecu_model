@@ -36,9 +36,9 @@ class TestEnumDataType(unittest.TestCase):
         self.assertEqual(data_type.kind, DataTypeKind.ENUM)
         self.assertEqual(data_type.underlying_type, PrimitiveDataType.UINT32)
         self.assertIsInstance(data_type.values, tuple)
-        self.assertEqual(data_type.values[0].identifier, "PARK")
+        self.assertEqual(str(data_type.values[0].identifier), "PARK")
         self.assertEqual(data_type.values[0].value, 0)
-        self.assertEqual(data_type.values[1].identifier, "DRIVE")
+        self.assertEqual(str(data_type.values[1].identifier), "DRIVE")
         self.assertEqual(data_type.values[1].value, 1)
 
     def test_prevents_in_place_literal_mutation(self) -> None:
@@ -116,7 +116,7 @@ class TestEnumDataType(unittest.TestCase):
             EnumValue(identifier="PARK", value=True)
 
     def test_rejects_literal_identifier_invalid_for_source_language(self) -> None:
-        with self.assertRaisesRegex(ValidationError, "Invalid FRANCA enum value identifier '1PARK'"):
+        with self.assertRaisesRegex(ValidationError, "Invalid identifier '1PARK'"):
             EnumDataType(
                 identifier="Gear",
                 source_kind=DataTypeSource.FRANCA,

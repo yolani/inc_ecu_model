@@ -21,7 +21,7 @@ from score.ecu_model.data_types.composite import CompositeDataType, DataTypeFiel
 
 
 class UnionDataType(CompositeDataType):
-    """A declared union data type whose fields are mutually exclusive, e.g. a Franca union or a protobuf oneof."""
+    """A declared union data type whose fields are mutually exclusive,  e.g. a Franca union or a protobuf oneof."""
 
     kind: Literal[DataTypeKind.UNION] = Field(default=DataTypeKind.UNION, frozen=True)
 

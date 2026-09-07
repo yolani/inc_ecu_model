@@ -32,7 +32,7 @@ class TestArrayDataType(unittest.TestCase):
         )
 
         self.assertEqual(array_type.kind, DataTypeKind.ARRAY)
-        self.assertEqual(array_type.identifier, "IntArray")
+        self.assertEqual(str(array_type.identifier), "IntArray")
         self.assertFalse(array_type.is_inline)
         self.assertEqual(array_type.data_type, PrimitiveDataType.INT32)
         self.assertEqual(array_type.dimension_min, 0)
@@ -71,7 +71,7 @@ class TestArrayDataType(unittest.TestCase):
                 data_type=PrimitiveDataType.UINT8,
                 is_inline=True,
             )
-        self.assertIn("inline arrays must not have a namespace", str(ctx.exception))
+        self.assertIn("namespace requires an identifier", str(ctx.exception))
 
     def test_rejects_non_inline_array_without_identifier(self) -> None:
         with self.assertRaises(ValidationError) as ctx:

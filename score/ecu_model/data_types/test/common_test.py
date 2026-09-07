@@ -40,7 +40,7 @@ class StructDataType(DataTypeBase):
     members: list[StructMember] = Field(default_factory=list)
 
 
-class TestDataTypeKind(unittest.TestCase):
+class TestDataTypeBaseCommon(unittest.TestCase):
     def test_primitive_is_not_a_declarable_kind(self) -> None:
         self.assertNotIn("primitive", {kind.value for kind in DataTypeKind})
 
@@ -49,11 +49,9 @@ class TestDataTypeKind(unittest.TestCase):
         self.assertEqual(str(DataTypeSource.FRANCA), "franca")
         self.assertEqual(str(DataTypeSource.CPP_HEADER_FILE), "cpp_header_file")
 
-
-class TestDataTypeBaseCommon(unittest.TestCase):
     def test_unsupported_source_kind_raises_value_error(self) -> None:
         with self.assertRaises(ValueError):
-            DataTypeBase._get_language_spec("unsupported_source_kind")  # type: ignore[arg-type]
+            DataTypeBase._get_separator("unsupported_source_kind")  # type: ignore[arg-type]
 
     def test_optional_fields_defaults_and_values(self) -> None:
         data_type = StructDataType(
@@ -168,7 +166,8 @@ class TestPickleRoundTrip(unittest.TestCase):
         blob = ModelRegistry.serialize()
         ModelRegistry.elements.clear()  # simulate loading into a fresh process
 
-        self.assertEqual(ModelRegistry.deserialize(blob), 2)
+        # 2 structs plus their FullyQualifiedName elements (both are namespaced).
+        self.assertEqual(ModelRegistry.deserialize(blob), 4)
 
         restored_waypoint = ModelRegistry.elements[waypoint.id]
         assert isinstance(restored_waypoint, StructDataType)
@@ -186,7 +185,7 @@ class TestPickleRoundTrip(unittest.TestCase):
 
         restored = ModelRegistry.elements[position.id]
         assert isinstance(restored, StructDataType)
-        self.assertEqual(restored.identifier, "Position")
+        self.assertEqual(str(restored.identifier), "Position")
         self.assertEqual(restored.members[0].type, PrimitiveDataType.FLOAT)
 
 

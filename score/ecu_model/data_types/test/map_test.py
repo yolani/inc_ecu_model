@@ -29,7 +29,7 @@ class TestMapDataType(unittest.TestCase):
         )
 
         self.assertEqual(map_type.kind, DataTypeKind.MAP)
-        self.assertEqual(map_type.identifier, "StringToIntMap")
+        self.assertEqual(str(map_type.identifier), "StringToIntMap")
         self.assertEqual(map_type.key_type, PrimitiveDataType.STRING)
         self.assertEqual(map_type.value_type, PrimitiveDataType.INT32)
 

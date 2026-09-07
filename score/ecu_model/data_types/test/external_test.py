@@ -39,8 +39,8 @@ class TestExternalDataType(unittest.TestCase):
 
         self.assertEqual(data_type.kind, DataTypeKind.EXTERNAL)
         self.assertEqual(data_type.source_kind, DataTypeSource.CPP_HEADER_FILE)
-        self.assertEqual(data_type.identifier, "AbortTransfer")
-        self.assertEqual(data_type.namespace, "adp::managed_data_transfer")
+        self.assertEqual(str(data_type.identifier), "AbortTransfer")
+        self.assertEqual(tuple(str(segment) for segment in data_type.namespace), ("adp", "managed_data_transfer"))
         self.assertEqual(data_type.fully_qualified_name, "adp::managed_data_transfer::AbortTransfer")
         self.assertEqual(data_type.header, self.header_path)
 

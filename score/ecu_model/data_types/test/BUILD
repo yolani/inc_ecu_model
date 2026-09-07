@@ -53,6 +53,16 @@ py_test(
 )
 
 py_test(
+    name = "identifier_test",
+    size = "small",
+    srcs = ["identifier_test.py"],
+    deps = [
+        "//score/ecu_model/data_types",
+        "@score_ecu_model_pip//pydantic",
+    ],
+)
+
+py_test(
     name = "composite_test",
     size = "small",
     srcs = ["composite_test.py"],

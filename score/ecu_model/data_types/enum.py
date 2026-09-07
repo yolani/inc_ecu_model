@@ -12,14 +12,14 @@
 # *******************************************************************************
 from __future__ import annotations
 
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 from typing import Literal
 
 from score.ecu_model.data_types.common import (
     DataTypeBase,
     DataTypeKind,
     DataTypeSource,
-    ValidationInfo,
+    Identifier,
 )
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.model import ModelElement
@@ -30,7 +30,7 @@ class EnumValue(ModelElement):
 
     model_config = ConfigDict(frozen=True)
 
-    identifier: str = Field(
+    identifier: Identifier = Field(
         description="Identifier of the enum literal in its source namespace",
     )
     value: int | None = Field(
@@ -71,23 +71,6 @@ class EnumDataType(DataTypeBase):
         default_factory=tuple,
         description="Named enum literals, not changeable after creation",
     )
-
-    @field_validator("values")
-    @classmethod
-    def _validate_value_identifiers(cls, values: tuple[EnumValue, ...], info: ValidationInfo) -> tuple[EnumValue, ...]:
-        """Validate enum literals according to their enclosing source language."""
-        source_kind = info.data.get("source_kind")
-        if source_kind is None:
-            return values
-        identifier_pattern, _, _ = cls._get_language_spec(source_kind)
-        for enum_value in values:
-            if not identifier_pattern.match(enum_value.identifier):
-                kind_name = getattr(source_kind, "name", str(source_kind))
-                raise ValueError(
-                    f"Invalid {kind_name} enum value identifier '{enum_value.identifier}': "
-                    "must start with a letter or underscore, followed by letters, digits or underscores"
-                )
-        return values
 
     @field_validator("values")
     @classmethod
