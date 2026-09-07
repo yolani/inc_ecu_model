@@ -13,7 +13,7 @@
 
 import unittest
 
-from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.map import MapDataType
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
@@ -39,11 +39,10 @@ class TestMapDataType(unittest.TestCase):
             identifier="PayloadMap",
             source_kind=DataTypeSource.FRANCA,
             key_type=PrimitiveDataType.STRING,
-            value_type=DataTypeRef(target_id=value_struct.id),
+            value_type=value_struct,
         )
 
-        self.assertIsInstance(map_type.value_type, DataTypeRef)
-        self.assertIs(map_type.value_type.resolve(), value_struct)
+        self.assertIs(map_type.value_type, value_struct)
 
 
 if __name__ == "__main__":

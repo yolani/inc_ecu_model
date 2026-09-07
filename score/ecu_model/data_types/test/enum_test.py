@@ -15,24 +15,22 @@ import unittest
 
 from pydantic import ValidationError
 
-from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.enum import EnumDataType, EnumValue
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
-from score.ecu_model.model import ModelRef
 
 
 class TestEnumDataType(unittest.TestCase):
     @staticmethod
-    def _value_ref(identifier: str, value: int | None = None) -> ModelRef:
-        enum_value = EnumValue(identifier=identifier, value=value)
-        return ModelRef(target_id=enum_value.id)
+    def _value(identifier: str, value: int | None = None) -> EnumValue:
+        return EnumValue(identifier=identifier, value=value)
 
     def test_defaults_to_uint32_and_keeps_declared_literals(self) -> None:
         data_type = EnumDataType(
             identifier="Gear",
             source_kind=DataTypeSource.FRANCA,
-            values=[self._value_ref("PARK", 0), self._value_ref("DRIVE", 1)],
+            values=[self._value("PARK", 0), self._value("DRIVE", 1)],
         )
 
         self.assertEqual(data_type.kind, DataTypeKind.ENUM)
@@ -47,25 +45,25 @@ class TestEnumDataType(unittest.TestCase):
         data_type = EnumDataType(
             identifier="Gear",
             source_kind=DataTypeSource.FRANCA,
-            values=[self._value_ref("PARK", 0)],
+            values=[self._value("PARK", 0)],
         )
 
         with self.assertRaises(AttributeError):
-            data_type.values.append(self._value_ref("DRIVE", 1))  # type: ignore[attr-defined]
+            data_type.values.append(self._value("DRIVE", 1))  # type: ignore[attr-defined]
         with self.assertRaises(ValidationError):
-            data_type.values[0].resolve().value = 1
+            data_type.values[0].value = 1
 
     def test_reassignment_validates_literal_value_definitions(self) -> None:
         data_type = EnumDataType(
             identifier="Gear",
             source_kind=DataTypeSource.FRANCA,
-            values=[self._value_ref("PARK", 0)],
+            values=[self._value("PARK", 0)],
         )
 
         with self.assertRaisesRegex(
             ValidationError, "enum values must either all be explicitly defined or all be omitted"
         ):
-            data_type.values = (self._value_ref("PARK", 0), self._value_ref("DRIVE"))
+            data_type.values = (self._value("PARK", 0), self._value("DRIVE"))
 
     def test_rejects_mixed_explicit_and_implicit_literal_values(self) -> None:
         with self.assertRaisesRegex(
@@ -74,7 +72,7 @@ class TestEnumDataType(unittest.TestCase):
             EnumDataType(
                 identifier="Gear",
                 source_kind=DataTypeSource.FRANCA,
-                values=[self._value_ref("PARK", 0), self._value_ref("DRIVE")],
+                values=[self._value("PARK", 0), self._value("DRIVE")],
             )
 
     def test_rejects_duplicate_literal_identifiers(self) -> None:
@@ -82,7 +80,7 @@ class TestEnumDataType(unittest.TestCase):
             EnumDataType(
                 identifier="Gear",
                 source_kind=DataTypeSource.FRANCA,
-                values=[self._value_ref("PARK", 0), self._value_ref("PARK", 1)],
+                values=[self._value("PARK", 0), self._value("PARK", 1)],
             )
 
     def test_rejects_duplicate_explicit_literal_values(self) -> None:
@@ -90,7 +88,7 @@ class TestEnumDataType(unittest.TestCase):
             EnumDataType(
                 identifier="Gear",
                 source_kind=DataTypeSource.FRANCA,
-                values=[self._value_ref("PARK", 0), self._value_ref("DRIVE", 0)],
+                values=[self._value("PARK", 0), self._value("DRIVE", 0)],
             )
 
     def test_supports_extending_another_declared_enum(self) -> None:
@@ -98,10 +96,10 @@ class TestEnumDataType(unittest.TestCase):
         child = EnumDataType(
             identifier="Gear",
             source_kind=DataTypeSource.FRANCA,
-            extends=DataTypeRef(target_id=parent.id),
+            extends=parent,
         )
 
-        self.assertIs(child.extends.resolve(), parent)
+        self.assertIs(child.extends, parent)
 
     def test_rejects_extending_base_type_of_different_kind(self) -> None:
         parent_struct = StructDataType(identifier="BaseStruct", source_kind=DataTypeSource.FRANCA)
@@ -110,7 +108,7 @@ class TestEnumDataType(unittest.TestCase):
             EnumDataType(
                 identifier="ChildEnum",
                 source_kind=DataTypeSource.FRANCA,
-                extends=DataTypeRef(target_id=parent_struct.id),
+                extends=parent_struct,
             )
 
     def test_rejects_boolean_literal_values(self) -> None:
@@ -122,7 +120,7 @@ class TestEnumDataType(unittest.TestCase):
             EnumDataType(
                 identifier="Gear",
                 source_kind=DataTypeSource.FRANCA,
-                values=[self._value_ref("1PARK")],
+                values=[self._value("1PARK")],
             )
 
 

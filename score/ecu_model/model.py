@@ -19,7 +19,6 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    model_validator,
 )
 
 
@@ -91,11 +90,10 @@ class ModelElement(ModelRegistry):
 
     """
     Basic configuration for the model element.
-    Set strict validation for the model fields, so that the model is re-validated whenever accessed or modified.
+    Set strict validation for the model fields, so that the model is re-validated whenever assigned.
     See https://pydantic.dev/docs/validation/dev/api/pydantic/config/ for more details.
     """
     model_config = ConfigDict(
-        revalidate_instances="always",
         validate_assignment=True,
     )
 
@@ -107,54 +105,3 @@ class ModelElement(ModelRegistry):
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, description={self.description})"
-
-
-class ModelRef(BaseModel):
-    """
-    Reference to a registered model element by its unique model identifier.
-
-    References behave like the element they point to: attribute reads and writes are delegated to the target and
-    a target element (or its identifier) may be assigned directly wherever a reference is expected. Referencing by
-    identifier instead of by object keeps references valid even when pydantic recreates instances during validation.
-    """
-
-    target_id: UUID = Field(
-        description="Identifier of the referenced model element",
-    )
-
-    @model_validator(mode="before")
-    @classmethod
-    def _accept_element_or_identifier(cls, value: Any) -> Any:
-        """Accept a model element or a bare identifier in place of an explicit reference payload."""
-        if isinstance(value, ModelElement):
-            return {"target_id": value.id}
-        if isinstance(value, UUID):
-            return {"target_id": value}
-        return value
-
-    def resolve(self) -> ModelElement:
-        """
-        Look the referenced model element up in the registry.
-
-        Resolution is deliberately lazy: a reference may be deserialized before its definition exists.
-
-        Raises:
-            KeyError: If no model element with the referenced identifier is registered.
-        """
-        element = ModelRegistry.elements.get(self.target_id)
-        if element is None:
-            raise KeyError(f"Unresolved model reference {self.target_id}")
-        return element
-
-    def __getattr__(self, name: str) -> Any:
-        """Transparently delegate attribute reads to the referenced target element."""
-        if name.startswith("_"):
-            return super().__getattr__(name)
-        return getattr(self.resolve(), name)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Transparently delegate attribute writes to the referenced target element."""
-        if name.startswith("_") or name in type(self).model_fields:
-            super().__setattr__(name, value)
-        else:
-            setattr(self.resolve(), name, value)

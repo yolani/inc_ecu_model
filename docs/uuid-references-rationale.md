@@ -15,6 +15,15 @@ SPDX-License-Identifier: Apache-2.0
 
 # UUID Reference Rationale
 
+> **Superseded.** The model dropped `ModelRef`/`DataTypeRef` (the UUID-backed
+> reference wrapper) in favor of direct object references. That change relies
+> on three constraints that also removed the concerns below: the model is
+> never serialized to JSON (only pickled), elements are read-only once built,
+> and the referenced type graph is a DAG (no cycles). `ModelRegistry` is kept
+> as a plain lookup/query facility (e.g. "find all enums"), not as a resolver.
+> The reasoning below documents why UUID references were originally chosen and
+> under which conditions direct references are safe instead.
+
 UUID references are a reasonable design for a serializable, graph-shaped model.
 Pydantic primarily models trees; it does not preserve object identity or graph
 edges as part of a JSON model contract.

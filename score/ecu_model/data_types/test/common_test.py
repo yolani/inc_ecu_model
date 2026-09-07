@@ -13,26 +13,24 @@
 
 import unittest
 from typing import Literal
-from uuid import uuid4
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from score.ecu_model.data_types.common import (
     DataTypeBase,
     DataTypeKind,
-    DataTypeRef,
     DataTypeSource,
-    TypeRef,
+    DataType,
 )
 from score.ecu_model.data_types.primitives import PrimitiveDataType
-from score.ecu_model.model import ModelElement, ModelRef, ModelRegistry
+from score.ecu_model.model import ModelRegistry
 
 
 class StructMember(BaseModel):
     """Minimal struct member used to exercise type references in the tests."""
 
     identifier: str
-    type: TypeRef
+    type: DataType
 
 
 class StructDataType(DataTypeBase):
@@ -106,84 +104,30 @@ class TestDataTypeBaseCommon(unittest.TestCase):
 
 
 class TestTypeRef(unittest.TestCase):
-    adapter = TypeAdapter(TypeRef)
+    adapter = TypeAdapter(DataType)
 
     def test_primitive_is_referenced_by_canonical_name(self) -> None:
         self.assertIs(self.adapter.validate_python("uint32"), PrimitiveDataType.UINT32)
 
-    def test_declared_type_is_referenced_by_identifier(self) -> None:
-        target_id = uuid4()
+    def test_declared_type_is_referenced_by_direct_instance(self) -> None:
+        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
 
-        ref = self.adapter.validate_python({"target_id": str(target_id)})
+        ref = self.adapter.validate_python(definition)
 
-        self.assertEqual(ref, DataTypeRef(target_id=target_id))
+        self.assertIs(ref, definition)
 
     def test_unknown_primitive_name_is_rejected(self) -> None:
         with self.assertRaises(ValidationError):
             self.adapter.validate_python("uint24")
 
-    def test_round_trip_keeps_both_variants_distinguishable(self) -> None:
-        for ref in (PrimitiveDataType.UINT32, DataTypeRef(target_id=uuid4())):
-            with self.subTest(ref=ref):
-                dumped = self.adapter.dump_python(ref)
 
-                self.assertEqual(self.adapter.validate_python(dumped), ref)
-
-
-class TestDataTypeRefResolution(unittest.TestCase):
-    def test_resolves_registered_definition(self) -> None:
+class TestDirectDataTypeReferences(unittest.TestCase):
+    def test_reference_is_the_same_object_as_the_target(self) -> None:
         definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
 
-        resolved = DataTypeRef(target_id=definition.id).resolve()
+        member = StructMember(identifier="position", type=definition)
 
-        self.assertIs(resolved, definition)
-
-    def test_delegates_attribute_access_transparently(self) -> None:
-        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
-        ref = DataTypeRef(target_id=definition.id)
-
-        self.assertEqual(ref.identifier, "Position")
-        self.assertEqual(ref.kind, DataTypeKind.STRUCT)
-
-    def test_delegates_attribute_assignment_transparently(self) -> None:
-        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
-        ref = DataTypeRef(target_id=definition.id)
-
-        ref.description = "a point in space"
-
-        self.assertEqual(definition.description, "a point in space")
-
-    def test_accepts_element_or_identifier_in_place_of_a_reference(self) -> None:
-        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
-        adapter = TypeAdapter(DataTypeRef)
-
-        for source in (definition, definition.id):
-            with self.subTest(source=source):
-                self.assertEqual(adapter.validate_python(source).target_id, definition.id)
-
-    def test_unknown_identifier_raises_key_error(self) -> None:
-        with self.assertRaises(KeyError):
-            DataTypeRef(target_id=uuid4()).resolve()
-
-    def test_reference_to_foreign_element_raises_type_error(self) -> None:
-        element = ModelElement()
-
-        with self.assertRaises(TypeError):
-            DataTypeRef(target_id=element.id).resolve()
-
-    def test_reference_survives_definition_that_does_not_exist_yet(self) -> None:
-        ref = DataTypeRef(target_id=uuid4())
-
-        definition = StructDataType(id=ref.target_id, identifier="Gear", source_kind=DataTypeSource.FRANCA)
-
-        self.assertIs(ref.resolve(), definition)
-
-
-class TestModelRefResolution(unittest.TestCase):
-    def test_resolves_registered_model_element(self) -> None:
-        element = ModelElement()
-
-        self.assertIs(ModelRef(target_id=element.id).resolve(), element)
+        self.assertIs(member.type, definition)
 
 
 class TestPickleRoundTrip(unittest.TestCase):
@@ -213,7 +157,7 @@ class TestPickleRoundTrip(unittest.TestCase):
             namespace="app.routing",
             source_kind=DataTypeSource.FRANCA,
             members=[
-                StructMember(identifier="position", type=DataTypeRef(target_id=position.id)),
+                StructMember(identifier="position", type=position),
                 StructMember(identifier="index", type=PrimitiveDataType.UINT32),
             ],
         )
@@ -228,11 +172,10 @@ class TestPickleRoundTrip(unittest.TestCase):
 
         restored_waypoint = ModelRegistry.elements[waypoint.id]
         assert isinstance(restored_waypoint, StructDataType)
-        member = restored_waypoint.members[0]
-        assert isinstance(member.type, DataTypeRef)
+        restored_position = ModelRegistry.elements[position.id]
 
-        self.assertIs(member.type.resolve(), ModelRegistry.elements[position.id])
-        self.assertIsNot(member.type.resolve(), position)
+        self.assertIs(restored_waypoint.members[0].type, restored_position)
+        self.assertIsNot(restored_position, position)
 
     def test_round_trip_preserves_identifiers_and_primitive_members(self) -> None:
         position, _ = self._build_type_graph()

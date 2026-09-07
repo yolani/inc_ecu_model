@@ -16,7 +16,7 @@ from typing import Literal
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, TypeRef
+from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataType
 
 
 class ArrayDataType(DataTypeBase):
@@ -27,7 +27,7 @@ class ArrayDataType(DataTypeBase):
         default=None,
         description="Identifier of a named array definition in its source namespace; absent for inline arrays",
     )
-    data_type: TypeRef = Field(
+    data_type: DataType = Field(
         description="Array element type definition",
     )
     is_inline: bool = Field(

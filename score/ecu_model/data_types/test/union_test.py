@@ -15,34 +15,32 @@ import unittest
 
 from pydantic import ValidationError
 
-from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.composite import DataTypeField
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.union import UnionDataType
-from score.ecu_model.model import ModelRef
 
 
 class TestUnionDataType(unittest.TestCase):
     @staticmethod
-    def _field_ref(
+    def _field(
         identifier: str,
-        data_type: PrimitiveDataType | DataTypeRef = PrimitiveDataType.UINT32,
+        data_type: object = PrimitiveDataType.UINT32,
         field_number: int | None = None,
         optional: bool = False,
-    ) -> ModelRef:
-        field = DataTypeField(
+    ) -> DataTypeField:
+        return DataTypeField(
             identifier=identifier,
             data_type=data_type,
             field_number=field_number,
             optional=optional,
         )
-        return ModelRef(target_id=field.id)
 
     def test_keeps_declared_fields_in_order(self) -> None:
         data_type = UnionDataType(
             identifier="Measurement",
             source_kind=DataTypeSource.PROTOBUF,
-            fields=[self._field_ref("distance", field_number=1), self._field_ref("angle", field_number=2)],
+            fields=[self._field("distance", field_number=1), self._field("angle", field_number=2)],
         )
 
         self.assertEqual(data_type.kind, DataTypeKind.UNION)
@@ -55,7 +53,7 @@ class TestUnionDataType(unittest.TestCase):
             UnionDataType(
                 identifier="Measurement",
                 source_kind=DataTypeSource.FRANCA,
-                fields=[self._field_ref("distance", optional=True)],
+                fields=[self._field("distance", optional=True)],
             )
 
 

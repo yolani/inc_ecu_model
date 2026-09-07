@@ -17,8 +17,7 @@ from typing import Literal
 from pydantic import Field, field_validator
 
 from score.ecu_model.data_types.common import DataTypeKind
-from score.ecu_model.data_types.composite import CompositeDataType
-from score.ecu_model.model import ModelRef
+from score.ecu_model.data_types.composite import CompositeDataType, DataTypeField
 
 
 class UnionDataType(CompositeDataType):
@@ -28,9 +27,9 @@ class UnionDataType(CompositeDataType):
 
     @field_validator("fields")
     @classmethod
-    def _reject_optional_fields(cls, fields: tuple[ModelRef, ...]) -> tuple[ModelRef, ...]:
+    def _reject_optional_fields(cls, fields: tuple[DataTypeField, ...]) -> tuple[DataTypeField, ...]:
         """Reject optional fields, as union fields are mutually exclusive and therefore optional by definition."""
-        for field_ref in fields:
-            if field_ref.resolve().optional:
+        for field in fields:
+            if field.optional:
                 raise ValueError("union fields must not be declared optional")
         return fields

@@ -16,16 +16,16 @@ from typing import Literal
 
 from pydantic import Field
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, TypeRef
+from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataType
 
 
 class MapDataType(DataTypeBase):
     """Definition of a map data type with key and value types."""
 
     kind: Literal[DataTypeKind.MAP] = Field(default=DataTypeKind.MAP, frozen=True)
-    key_type: TypeRef = Field(
+    key_type: DataType = Field(
         description="Map key type definition",
     )
-    value_type: TypeRef = Field(
+    value_type: DataType = Field(
         description="Map value type definition",
     )

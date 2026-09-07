@@ -22,12 +22,13 @@ This guide migrates a builder that produces Orion's
 
 The Orion builder represents declared data types as an object tree and links
 objects through either direct instances or `BaseQualifiedName`. The SCORE model
-registers each declared element under a UUID. References store only that UUID,
-but can be read and assigned like the referenced element.
+links elements the same way: fields hold the referenced element directly.
+`ModelRegistry` still tracks every element under its `id` for lookup and
+process-wide queries (e.g. "find all enums"), but references themselves are
+plain object references, not a UUID indirection.
 
 Create model elements before creating the model objects that contain references
-to them. Pass elements directly at construction sites; `ModelRef` and
-`DataTypeRef` convert them to UUID references automatically.
+to them. Pass elements directly at construction sites.
 
 ```python
 from score.ecu_model.data_types.common import DataTypeSource
@@ -46,9 +47,8 @@ position = StructDataType(
 assert position.fields[0].identifier == "x"
 ```
 
-The stored value of `position.fields[0]` is a `ModelRef`. `target_id` remains
-available for serialization and diagnostics; builder code should normally not
-need it or call `resolve()`.
+`position.fields[0]` is the exact `field` instance passed in; no wrapper type
+is involved.
 
 ## Type Mapping
 
@@ -85,8 +85,8 @@ a path to an existing regular file, not a C++ include spelling such as
 
 ## Reference Conversion
 
-Replace each Orion `BaseQualifiedName | DataTypeDefinition` link with a SCORE
-`DataTypeRef`. For normal construction, pass the target element directly:
+Replace each Orion `BaseQualifiedName | DataTypeDefinition` link with a direct
+reference to the target SCORE element:
 
 ```python
 alias = TypedefDataType(
@@ -104,13 +104,11 @@ map_type = MapDataType(
 ```
 
 A qualified-name link from the old builder needs a lookup phase. Resolve it to
-exactly one declared SCORE data type, then pass that element. For genuinely
-forward references, allocate a UUID for every declaration during a first pass
-and create `DataTypeRef(target_id=declared_id)`. The target can register later.
-
-Use `DataTypeRef` only for declared data types. Use `ModelRef` for
-`DataTypeField` and `EnumValue` references. Usually neither wrapper needs to be
-constructed explicitly because direct elements are accepted.
+exactly one declared SCORE data type, then pass that element. Because
+references are direct objects, the target must already exist at construction
+time; there is no lazy/forward-reference indirection to fall back on. Build
+declarations in dependency order (leaves first), or use `ModelRegistry.elements`
+to look up an already-built element by `id` during a multi-pass builder.
 
 ## Builder Order
 
@@ -118,17 +116,16 @@ constructed explicitly because direct elements are accepted.
 2. Convert names and namespaces; validate that every declared type has a known
    `DataTypeSource`.
 3. Create `EnumValue` and `DataTypeField` elements. They register immediately.
-4. Create declared types, passing known targets directly and UUID references for
-   unresolved forward targets.
+4. Create declared types, passing referenced targets directly; a target must
+   already exist (dependency order) before it can be referenced.
 5. Resolve old qualified-name links against the builder's declaration index;
    report missing or ambiguous names before model construction completes.
 6. Serialize cache data with `ModelRegistry.serialize()`. Restore it with
-   `ModelRegistry.deserialize()` before consumers inspect references.
+   `ModelRegistry.deserialize()` before consumers inspect elements.
 
-For model construction, enum values and composite fields are validated and
-resolved immediately. They must therefore exist before their containing enum,
-struct, or union is built. A declared type used as a field's `data_type` may be
-a forward UUID reference because that particular link is resolved lazily.
+For model construction, enum values, composite fields, and a field's referenced
+data type are all validated immediately and must therefore exist before their
+containing enum, struct, union, array, map, or typedef is built.
 
 ## Validation Differences
 
@@ -147,5 +144,6 @@ a forward UUID reference because that particular link is resolved lazily.
 
 Keep Orion imports and qualified-name resolution inside one adapter module. Its
 public output should be only SCORE model elements and `ModelRegistry` cache
-bytes. This keeps the builder free of SCORE UUID details while avoiding a
-partial migration where both reference systems escape into downstream tools.
+bytes. This keeps the builder free of Orion-specific reference types while
+avoiding a partial migration where both reference systems escape into
+downstream tools.

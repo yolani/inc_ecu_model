@@ -13,7 +13,7 @@
 
 import unittest
 
-from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
 from score.ecu_model.data_types.typedef import TypedefDataType
@@ -36,11 +36,10 @@ class TestTypedefDataType(unittest.TestCase):
         typedef = TypedefDataType(
             identifier="PointAlias",
             source_kind=DataTypeSource.FRANCA,
-            data_type=DataTypeRef(target_id=target_struct.id),
+            data_type=target_struct,
         )
 
-        self.assertIsInstance(typedef.data_type, DataTypeRef)
-        self.assertIs(typedef.data_type.resolve(), target_struct)
+        self.assertIs(typedef.data_type, target_struct)
 
 
 if __name__ == "__main__":

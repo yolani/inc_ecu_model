@@ -16,13 +16,13 @@ from typing import Literal
 
 from pydantic import Field
 
-from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, TypeRef
+from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataType
 
 
 class TypedefDataType(DataTypeBase):
     """Definition of a typedef / alias / using / ... data type pointing to another data type."""
 
     kind: Literal[DataTypeKind.TYPEDEF] = Field(default=DataTypeKind.TYPEDEF, frozen=True)
-    data_type: TypeRef = Field(
+    data_type: DataType = Field(
         description="Aliased type definition",
     )

@@ -64,12 +64,6 @@ class TestModelElement(unittest.TestCase):
         with self.assertRaises(ValidationError):
             element.id = "not-a-uuid"
 
-    def test_existing_instance_is_revalidated(self) -> None:
-        # model_construct() bypasses validators, so this instance holds an invalid id undetected.
-        bypassed = ModelElement.model_construct(id="not-a-uuid", description="desc")
-        with self.assertRaises(ValidationError):
-            ModelElement.model_validate(bypassed)
-
 
 class TestSerialization(unittest.TestCase):
     def setUp(self) -> None:

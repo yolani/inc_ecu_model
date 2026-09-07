@@ -13,28 +13,26 @@
 
 import unittest
 
-from score.ecu_model.data_types.common import DataTypeKind, DataTypeRef, DataTypeSource
+from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
 from score.ecu_model.data_types.composite import DataTypeField
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
-from score.ecu_model.model import ModelRef
 
 
 class TestStructDataType(unittest.TestCase):
     @staticmethod
-    def _field_ref(
+    def _field(
         identifier: str,
-        data_type: PrimitiveDataType | DataTypeRef = PrimitiveDataType.UINT32,
+        data_type: object = PrimitiveDataType.UINT32,
         field_number: int | None = None,
-    ) -> ModelRef:
-        field = DataTypeField(identifier=identifier, data_type=data_type, field_number=field_number)
-        return ModelRef(target_id=field.id)
+    ) -> DataTypeField:
+        return DataTypeField(identifier=identifier, data_type=data_type, field_number=field_number)
 
     def test_keeps_declared_fields_in_order(self) -> None:
         data_type = StructDataType(
             identifier="Position",
             source_kind=DataTypeSource.PROTOBUF,
-            fields=[self._field_ref("x", field_number=1), self._field_ref("y", field_number=2)],
+            fields=[self._field("x", field_number=1), self._field("y", field_number=2)],
         )
 
         self.assertEqual(data_type.kind, DataTypeKind.STRUCT)
@@ -54,20 +52,20 @@ class TestStructDataType(unittest.TestCase):
         data_type = StructDataType(
             identifier="Pose",
             source_kind=DataTypeSource.FRANCA,
-            fields=[self._field_ref("position", DataTypeRef(target_id=nested.id))],
+            fields=[self._field("position", nested)],
         )
 
-        self.assertIs(data_type.fields[0].resolve().data_type.resolve(), nested)
+        self.assertIs(data_type.fields[0].data_type, nested)
 
     def test_prevents_in_place_field_mutation(self) -> None:
         data_type = StructDataType(
             identifier="Position",
             source_kind=DataTypeSource.FRANCA,
-            fields=[self._field_ref("x")],
+            fields=[self._field("x")],
         )
 
         with self.assertRaises(AttributeError):
-            data_type.fields.append(self._field_ref("y"))  # type: ignore[attr-defined]
+            data_type.fields.append(self._field("y"))  # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":

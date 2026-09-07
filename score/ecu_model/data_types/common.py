@@ -25,7 +25,7 @@ from score.ecu_model.data_types.protobuf import (
     PROTOBUF_PACKAGE_PATTERN,
     PROTOBUF_SEPARATOR,
 )
-from score.ecu_model.model import ModelElement, ModelRef
+from score.ecu_model.model import ModelElement
 
 
 class DataTypeKind(str, Enum):
@@ -162,16 +162,5 @@ class DataTypeBase(ModelElement):
         return f"{self.namespace}{separator}{self.identifier}"
 
 
-class DataTypeRef(ModelRef):
-    """Reference to a declared data type definition by its unique model identifier."""
-
-    def resolve(self) -> DataTypeBase:
-        """Resolve this reference and ensure that it points to a data type definition."""
-        element = super().resolve()
-        if not isinstance(element, DataTypeBase):
-            raise TypeError(f"Reference {self.target_id} points to {type(element).__name__}, expected DataTypeBase")
-        return element
-
-
-# Use site of a data type: either a builtin primitive or a reference to a declared definition.
-TypeRef = PrimitiveDataType | DataTypeRef
+# Use site of a data type: either a builtin primitive or a direct reference to a declared definition.
+DataType = PrimitiveDataType | DataTypeBase
