@@ -10,12 +10,24 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+load("@rules_python//python:defs.bzl", "py_library")
 
-load("@rules_python//python:defs.bzl", "py_test")
-
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
+py_library(
+    name = "data_types",
+    srcs = [
+        "array.py",
+        "common.py",
+        "composite.py",
+        "enum.py",
+        "external.py",
+        "identifier.py",
+        "map.py",
+        "primitives.py",
+        "struct.py",
+        "typedef.py",
+        "union.py",
+    ],
+    visibility = ["//visibility:public"],
     deps = [
         "//score/ecu_model",
         "@score_ecu_model_pip//pydantic",

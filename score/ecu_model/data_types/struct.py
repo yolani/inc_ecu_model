@@ -10,14 +10,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+from __future__ import annotations
 
-load("@rules_python//python:defs.bzl", "py_test")
+from typing import Literal
 
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+from pydantic import Field
+
+from score.ecu_model.data_types.common import DataTypeKind
+from score.ecu_model.data_types.composite import CompositeDataType
+
+
+class StructDataType(CompositeDataType):
+    """A declared struct data type with named fields."""
+
+    kind: Literal[DataTypeKind.STRUCT] = Field(default=DataTypeKind.STRUCT, frozen=True)

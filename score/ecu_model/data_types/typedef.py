@@ -10,14 +10,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+from __future__ import annotations
 
-load("@rules_python//python:defs.bzl", "py_test")
+from typing import Literal
 
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    deps = [
-        "//score/ecu_model",
-        "@score_ecu_model_pip//pydantic",
-    ],
-)
+from pydantic import Field
+
+from score.ecu_model.data_types.common import DataTypeBase, DataTypeKind, DataType
+
+
+class TypedefDataType(DataTypeBase):
+    """Definition of a typedef / alias / using / ... data type pointing to another data type."""
+
+    kind: Literal[DataTypeKind.TYPEDEF] = Field(default=DataTypeKind.TYPEDEF, frozen=True)
+    data_type: DataType = Field(
+        description="Aliased type definition",
+    )
