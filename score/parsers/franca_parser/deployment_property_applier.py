@@ -15,13 +15,9 @@
 
 import logging
 
-from score.ecu_model.common.franca_name_types import (
-    ValidIdentifier,
-)
-from score.ecu_model.data_types.data_type_definition import (
-    DataTypeField,
-    DataTypeModel,
-)
+from score.ecu_model.data_types.common import DataTypeBase
+from score.ecu_model.data_types.composite import DataTypeField
+from score.parsers.franca_parser.model.franca_name_types import ValidIdentifier
 from score.parsers.franca_parser.model.fdepl.definition import (
     DeploymentElement,
     DeploymentParameter,
@@ -73,7 +69,7 @@ class DeploymentPropertyApplier:
         if hosts is None:
             return
         target = deployment.deployed_type
-        if not isinstance(target, DataTypeModel):
+        if not isinstance(target, DataTypeBase):
             raise ValueError("Unresolved datatype deployment target")
         self._apply_parameters(target, deployment.parameter_set, specification, hosts)
         if isinstance(deployment, (StructDeployment, UnionDeployment)):
@@ -94,7 +90,7 @@ class DeploymentPropertyApplier:
 
     def _apply_parameters(
         self,
-        target: DataTypeModel | DataTypeField,
+        target: DataTypeBase | DataTypeField,
         parameters: list[DeploymentParameter],
         specification: DeploymentSpecification,
         hosts: set[str],

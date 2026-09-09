@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from score.ecu_model.common.franca_name_types import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
     ValidIdentifier,
 )

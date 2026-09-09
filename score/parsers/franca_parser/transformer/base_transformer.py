@@ -15,10 +15,12 @@
 
 from lark import Transformer, v_args
 
-from score.ecu_model.common.franca_name_types import (
-    FullyQualifiedName,
-    ValidIdentifier,
-)
+from score.parsers.franca_parser.model.franca_name_types import FullyQualifiedName, ValidIdentifier
+
+
+def franca_identifier(name: object) -> ValidIdentifier:
+    """Build an identifier from a Franca token, dropping the marker that escapes reserved keywords."""
+    return ValidIdentifier(str(name))
 
 
 class FrancaFileTransformer(Transformer):
@@ -33,10 +35,10 @@ class FrancaFileTransformer(Transformer):
     @v_args(inline=True)
     def f_valid_id(name: object) -> ValidIdentifier:
         """Build a validated Franca identifier."""
-        return ValidIdentifier(str(name))
+        return franca_identifier(name)
 
     @staticmethod
     @v_args(inline=True)
     def fi_keywords(keyword: object) -> ValidIdentifier:
         """Build an escaped Franca keyword identifier."""
-        return ValidIdentifier(str(keyword))
+        return franca_identifier(keyword)

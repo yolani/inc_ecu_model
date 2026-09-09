@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass, field
 
-from score.ecu_model.common.franca_name_types import ValidIdentifier
+from score.parsers.franca_parser.model.franca_name_types import ValidIdentifier
 
 
 @dataclass

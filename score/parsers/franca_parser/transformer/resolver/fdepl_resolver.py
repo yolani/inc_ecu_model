@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from score.ecu_model.common.franca_name_types import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
 )
 from score.parsers.franca_parser.model.fdepl.fdepl_file import (
@@ -207,7 +207,7 @@ class FDEPLResolver:
         """Resolve one datatype deployment and any deployed members."""
         reference = deployment_element.deployed_type
         for datatype in type_collection.datatypes:
-            if getattr(datatype, "name", None) == reference:
+            if getattr(datatype, "name", None) is not None and datatype.name.as_str == reference.as_str:
                 break
         else:
             raise ValueError(f"Could not resolve FIDL datatype {reference.as_str} in {owning_file.file_path}")

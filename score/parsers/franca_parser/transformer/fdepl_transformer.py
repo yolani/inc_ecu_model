@@ -15,10 +15,7 @@
 
 from lark import v_args
 
-from score.ecu_model.common.franca_name_types import (
-    FullyQualifiedName,
-    ValidIdentifier,
-)
+from score.parsers.franca_parser.model.franca_name_types import FullyQualifiedName, ValidIdentifier
 from score.parsers.franca_parser.deployment_property_applier import (
     DeploymentPropertyApplier,
 )
@@ -53,6 +50,7 @@ from score.parsers.franca_parser.model.franca_file import (
 from score.parsers.franca_parser.model.parsed_file import ParsedFile
 from score.parsers.franca_parser.transformer.base_transformer import (
     FrancaFileTransformer,
+    franca_identifier,
 )
 from score.parsers.franca_parser.transformer.resolver.fdepl_resolver import (
     FDEPLResolver,
@@ -440,7 +438,7 @@ class FDEPLTransformer(FrancaFileTransformer):
     @v_args(inline=True)
     def fd_valid_id(name: object) -> ValidIdentifier:
         """Build an identifier using the FDEPL keyword set."""
-        return ValidIdentifier(str(name))
+        return franca_identifier(name)
 
     @staticmethod
     def fd_fqn(names: list[ValidIdentifier]) -> FullyQualifiedName:
@@ -451,4 +449,4 @@ class FDEPLTransformer(FrancaFileTransformer):
     @v_args(inline=True)
     def fd_keywords(keyword: object) -> ValidIdentifier:
         """Build an escaped FDEPL keyword identifier."""
-        return ValidIdentifier(str(keyword))
+        return franca_identifier(keyword)

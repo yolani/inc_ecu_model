@@ -16,13 +16,12 @@
 from pathlib import Path
 import unittest
 
-from score.ecu_model.common.franca_name_types import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
     ValidIdentifier,
 )
-from score.ecu_model.data_types.data_type_definition import (
-    StructDataType,
-)
+from score.ecu_model.data_types.common import DataTypeSource
+from score.ecu_model.data_types.struct import StructDataType
 from score.parsers.franca_parser.model.fidl.fidl_file import (
     FIDLFileModel,
 )
@@ -39,7 +38,7 @@ from score.parsers.franca_parser.transformer.resolver.fidl_datatype_resolver imp
 
 def qualified_name(value: str) -> FullyQualifiedName:
     """Create a qualified Franca name from a readable dotted test value."""
-    return FullyQualifiedName(names=[ValidIdentifier(part) for part in value.split(".")])
+    return FullyQualifiedName(names=value.split("."))
 
 
 def type_collection(name: str | None, *datatypes: StructDataType) -> TypeCollection:
@@ -52,7 +51,7 @@ def type_collection(name: str | None, *datatypes: StructDataType) -> TypeCollect
 
 def struct(name: str) -> StructDataType:
     """Create a minimal datatype definition for resolver behavior tests."""
-    return StructDataType(name=ValidIdentifier(name))
+    return StructDataType(qualified_name=name, source_kind=DataTypeSource.FRANCA)
 
 
 class FIDLDataTypeResolverTest(unittest.TestCase):

@@ -13,7 +13,7 @@
 
 """Shared qualified-name matching utilities for Franca resolvers."""
 
-from score.ecu_model.common.franca_name_types import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
     ValidIdentifier,
 )

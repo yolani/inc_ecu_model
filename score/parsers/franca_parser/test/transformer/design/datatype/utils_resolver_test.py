@@ -15,7 +15,7 @@
 
 import unittest
 
-from score.ecu_model.common.franca_name_types import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
     ValidIdentifier,
 )
@@ -27,7 +27,7 @@ from score.parsers.franca_parser.transformer.resolver.utils_resolver import (
 
 def qualified_name(value: str) -> FullyQualifiedName:
     """Create a qualified Franca name from a readable dotted test value."""
-    return FullyQualifiedName(names=[ValidIdentifier(part) for part in value.split(".")])
+    return FullyQualifiedName(names=value.split("."))
 
 
 class UtilsResolverTest(unittest.TestCase):

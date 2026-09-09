@@ -26,6 +26,7 @@ py_library(
         "fidl/fidl_file.py",
         "fidl/type_collection.py",
         "franca_file.py",
+        "franca_name_types.py",
         "parsed_file.py",
     ],
     visibility = [
@@ -33,6 +34,6 @@ py_library(
         "//score/parsers/franca_parser:__subpackages__",
     ],
     deps = [
-        "//score/ecu_model",
+        "//score/ecu_model/data_types",
     ],
 )

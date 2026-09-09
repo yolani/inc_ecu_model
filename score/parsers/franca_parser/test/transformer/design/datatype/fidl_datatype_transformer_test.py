@@ -18,19 +18,19 @@ import unittest
 
 from lark.exceptions import VisitError
 
-from score.ecu_model.data_types.data_type_definition import (
-    ArrayDataType,
-    EnumDataType,
-    MapDataType,
-    PrimitiveDataType,
-    PrimitiveDataTypeKind,
-    StructDataType,
-    TypedefDataType,
-)
+from score.ecu_model.data_types.array import ArrayDataType
+from score.ecu_model.data_types.common import DataTypeSource
+from score.ecu_model.data_types.enum import EnumDataType
+from score.ecu_model.data_types.identifier import Identifier
+from score.ecu_model.data_types.map import MapDataType
+from score.ecu_model.data_types.primitives import PrimitiveDataType
+from score.ecu_model.data_types.struct import StructDataType
+from score.ecu_model.data_types.typedef import TypedefDataType
 from score.parsers.franca_parser.parser import FrancaParser
-from score.parsers.franca_parser.transformer.file_graph_transformer import (
-    FrancaFileGraphTransformer,
-)
+from score.parsers.franca_parser.model.franca_file import FrancaTransformationContext
+from score.parsers.franca_parser.model.franca_name_types import FullyQualifiedName as FrancaFullyQualifiedName
+from score.parsers.franca_parser.transformer.fidl_transformer import FIDLTransformer
+from score.parsers.franca_parser.transformer.file_graph_transformer import FrancaFileGraphTransformer
 
 
 TEST_DATA_DIRECTORY = Path(__file__).parent / "test_data" / "datatype_definitions"
@@ -69,7 +69,7 @@ class FIDLDatatypeTransformerTest(unittest.TestCase):
         self.assertTrue(
             all(datatype.namespace.as_str == "example.datatypes.Definitions" for datatype in collection.datatypes)
         )
-        self.assertTrue(all(datatype.source_kind == "franca" for datatype in collection.datatypes))
+        self.assertTrue(all(datatype.source_kind is DataTypeSource.FRANCA for datatype in collection.datatypes))
         self.assertTrue(all(datatype.source_uri == str(source_file.resolve()) for datatype in collection.datatypes))
 
         typedef = collection.datatypes[0]
@@ -81,8 +81,7 @@ class FIDLDatatypeTransformerTest(unittest.TestCase):
         datatype_map = collection.datatypes[8]
 
         self.assertIsInstance(typedef, TypedefDataType)
-        self.assertEqual(typedef.data_type.name.as_str, "uint32")
-        self.assertEqual(typedef.data_type.primitive, PrimitiveDataTypeKind.UINT32)
+        self.assertIs(typedef.data_type, PrimitiveDataType.UINT32)
         self.assertIsInstance(enum, EnumDataType)
         self.assertEqual(
             [value.value for value in enum.values],
@@ -101,8 +100,8 @@ class FIDLDatatypeTransformerTest(unittest.TestCase):
         )
         self.assertEqual((bounded_array.dimension_min, bounded_array.dimension_max), (1, 64))
         self.assertIsInstance(datatype_map, MapDataType)
-        self.assertIsInstance(datatype_map.map_from, PrimitiveDataType)
-        self.assertIs(datatype_map.map_to, struct)
+        self.assertIsInstance(datatype_map.key_type, PrimitiveDataType)
+        self.assertIs(datatype_map.value_type, struct)
 
     def test_transform_files_given_file_imports_expect_imported_and_local_references_resolved(self) -> None:
         # Given a FIDL file importing named and anonymous type collections.
@@ -131,6 +130,18 @@ class FIDLDatatypeTransformerTest(unittest.TestCase):
         self.assertIs(local_container.fields[2].data_type, shared_payload)
         self.assertIs(local_container.fields[3].data_type, anonymous_payload)
         self.assertIs(local_container.fields[4].data_type, anonymous_payload)
+
+    def test_convert_qualified_franca_reference_expect_strict_model_fqn(self) -> None:
+        franca_reference = FrancaFullyQualifiedName(names=["Customer", "FullyQualifiedName"])
+        transformer = FIDLTransformer(
+            {},
+            FrancaTransformationContext(file_path=Path("test.fidl"), imported_files=[]),
+        )
+
+        model_reference = transformer._to_model_reference(franca_reference)
+
+        self.assertIsInstance(model_reference, Identifier)
+        self.assertEqual(model_reference.as_str, "Customer_FullyQualifiedName")
 
     def test_transform_files_given_local_type_collections_expect_same_and_sibling_references_resolved(self) -> None:
         # Given one FIDL file with references to declarations in two type collections.

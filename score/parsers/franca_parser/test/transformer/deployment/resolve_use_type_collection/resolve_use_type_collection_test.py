@@ -16,6 +16,7 @@
 from pathlib import Path
 import unittest
 
+from score.parsers.franca_parser.model.franca_name_types import FullyQualifiedName
 from score.parsers.franca_parser.parser import FrancaParser
 from score.parsers.franca_parser.transformer.file_graph_transformer import (
     FrancaFileGraphTransformer,
@@ -91,6 +92,12 @@ class ResolveUseTypeCollectionTest(unittest.TestCase):
         fqn_deployment = transformed_files[
             (fixture_directory / "imported_definition_fqn.fdepl").resolve()
         ].type_collection_deployments[0]
+        dotted_deployment = transformed_files[
+            (fixture_directory / "imported_use_fqn.fdepl").resolve()
+        ].type_collection_deployments[0]
+        self.assertIsInstance(dotted_deployment.name, FullyQualifiedName)
+        self.assertEqual(dotted_deployment.name.as_str, "Consumer.FullyQualifiedName")
+        self.assertEqual(dotted_deployment.name.identifier, "Consumer.FullyQualifiedName")
         expected_deployments = {
             "imported_use.fdepl": simple_deployment,
             "imported_use_file_only.fdepl": simple_deployment,
