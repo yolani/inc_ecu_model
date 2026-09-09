@@ -13,9 +13,9 @@
 
 """Shared qualified-name matching utilities for Franca resolvers."""
 
-from score.ecu_model.common.franca_name_types import (
+from score.ecu_model.data_types.identifier import (
     FullyQualifiedName,
-    ValidIdentifier,
+    Identifier,
 )
 
 
@@ -42,7 +42,7 @@ def is_namespace_visible(
 
 def matches_named_element_reference(
     reference: FullyQualifiedName,
-    element_name: FullyQualifiedName | ValidIdentifier,
+    element_name: FullyQualifiedName | Identifier,
     definition_namespace: FullyQualifiedName | None,
     imported_namespace: FullyQualifiedName | None = None,
 ) -> bool:
@@ -85,8 +85,8 @@ def _parts(qualified_name: FullyQualifiedName) -> tuple[str, ...]:
     return tuple(name.as_str for name in qualified_name.names)
 
 
-def _name_parts(name: FullyQualifiedName | ValidIdentifier) -> tuple[str, ...]:
+def _name_parts(name: FullyQualifiedName | Identifier) -> tuple[str, ...]:
     """Return identifier text for a Franca name of either supported shape."""
-    if isinstance(name, ValidIdentifier):
+    if isinstance(name, Identifier):
         return (name.as_str,)
     return _parts(name)

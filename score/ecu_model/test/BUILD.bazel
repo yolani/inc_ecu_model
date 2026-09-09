@@ -17,3 +17,13 @@ py_test(
     name = "main_test",
     srcs = ["main_test.py"],
 )
+
+py_test(
+    name = "model_test",
+    size = "small",
+    srcs = ["model_test.py"],
+    deps = [
+        "//score/ecu_model",
+        "@pypi//pydantic",
+    ],
+)

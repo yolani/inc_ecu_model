@@ -22,7 +22,7 @@ from score.parsers.franca_parser.model.fdepl.definition import (
     DeploymentElement,
     DeploymentParameter,
 )
-from score.ecu_model.common.franca_name_types import (
+from score.ecu_model.data_types.identifier import (
     FullyQualifiedName,
 )
 from score.parsers.franca_parser.model.fidl.type_collection import (

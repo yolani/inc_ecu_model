@@ -18,7 +18,7 @@ from pathlib import Path
 
 from lark import v_args
 
-from score.ecu_model.common.franca_name_types import FullyQualifiedName
+from score.ecu_model.data_types.identifier import FullyQualifiedName
 from score.parsers.franca_parser.model.franca_file import (
     ImportedNamespace,
 )

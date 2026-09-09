@@ -18,11 +18,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from score.ecu_model.common.franca_name_types import FullyQualifiedName
-from score.ecu_model.data_types.data_type_definition import (
-    DataTypeDefinition,
-    DataTypeModel,
-)
+from score.ecu_model.data_types.identifier import FullyQualifiedName
+from score.ecu_model.data_types.common import DataTypeBase
 from score.parsers.franca_parser.model.fidl.fidl_file import (
     FIDLFileModel,
 )
@@ -43,8 +40,8 @@ class PendingDatatypeReference:
     """A typed FIDL reference slot awaiting declaration resolution."""
 
     reference: FullyQualifiedName
-    bind: Callable[[DataTypeDefinition], None]
-    owning_declaration: DataTypeModel
+    bind: Callable[[DataTypeBase], None]
+    owning_declaration: DataTypeBase
     owning_file: FIDLFileModel | None = None
     owning_collection: TypeCollection | None = None
 
@@ -61,7 +58,7 @@ class FIDLDataTypeResolver:
         reference: FullyQualifiedName,
         owning_file: FIDLFileModel,
         owning_collection: TypeCollection,
-    ) -> DataTypeDefinition:
+    ) -> DataTypeBase:
         """Resolve one reference from a type collection or raise a contextual error."""
         matches = self._local_matches(reference, owning_file, owning_collection)
         matches.extend(self._import_matches(reference, owning_file))
@@ -72,7 +69,7 @@ class FIDLDataTypeResolver:
         reference: FullyQualifiedName,
         owning_file: FIDLFileModel,
         owning_collection: TypeCollection,
-    ) -> DataTypeDefinition | None:
+    ) -> DataTypeBase | None:
         """Resolve only a declaration in the owning type collection."""
         return self._single_match(
             reference,
@@ -85,7 +82,7 @@ class FIDLDataTypeResolver:
         self,
         reference: FullyQualifiedName,
         owning_file: FIDLFileModel | FrancaTransformationContext,
-    ) -> DataTypeDefinition | None:
+    ) -> DataTypeBase | None:
         """Resolve only a declaration in an imported FIDL file."""
         return self._single_match(
             reference,
@@ -135,7 +132,7 @@ class FIDLDataTypeResolver:
         reference: FullyQualifiedName,
         owning_file: FIDLFileModel,
         owning_collection: TypeCollection,
-    ) -> list[DataTypeDefinition]:
+    ) -> list[DataTypeBase]:
         matches = self._lookup_candidates(
             owning_file, self._collection_base_parts(owning_file, owning_collection), reference
         )
@@ -151,8 +148,8 @@ class FIDLDataTypeResolver:
         self,
         reference: FullyQualifiedName,
         owning_file: FIDLFileModel | FrancaTransformationContext,
-    ) -> list[DataTypeDefinition]:
-        matches: list[DataTypeDefinition] = []
+    ) -> list[DataTypeBase]:
+        matches: list[DataTypeBase] = []
         for imported_namespace in owning_file.imported_files:
             imported_file = self._files.get(imported_namespace.file_path)
             if not isinstance(imported_file, FIDLFileModel):
@@ -169,10 +166,10 @@ class FIDLDataTypeResolver:
     def _single_match(
         reference: FullyQualifiedName,
         owning_file: FIDLFileModel | FrancaTransformationContext,
-        matches: list[DataTypeDefinition],
+        matches: list[DataTypeBase],
         required: bool,
-    ) -> DataTypeDefinition | None:
-        distinct_matches: list[DataTypeDefinition] = []
+    ) -> DataTypeBase | None:
+        distinct_matches: list[DataTypeBase] = []
         seen_declarations: set[int] = set()
         for match in matches:
             if id(match) not in seen_declarations:
@@ -191,7 +188,7 @@ class FIDLDataTypeResolver:
         target_file: FIDLFileModel,
         base_parts: tuple[str, ...],
         reference: FullyQualifiedName,
-    ) -> list[DataTypeDefinition]:
+    ) -> list[DataTypeBase]:
         return [
             datatype
             for candidate in expand_fqn_candidates(base_parts, self._fqn_parts(reference))

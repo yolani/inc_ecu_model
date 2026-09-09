@@ -11,16 +11,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-"""FIDL type collection parser model."""
+load("@rules_python//python:defs.bzl", "py_binary")
 
-from dataclasses import dataclass, field
-
-from score.ecu_model.data_types.identifier import Identifier
-
-
-@dataclass
-class TypeCollection:
-    """FIDL type collection and the datatypes it declares."""
-
-    name: Identifier | None
-    datatypes: list[object] = field(default_factory=list)
+py_binary(
+    name = "lcov_to_cobertura",
+    srcs = ["lcov_to_cobertura.py"],
+    visibility = ["//visibility:public"],
+    deps = ["@pypi//lcov_cobertura"],
+)
