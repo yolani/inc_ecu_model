@@ -22,7 +22,7 @@ from score.ecu_model.data_types.struct import StructDataType
 class TestMapDataType(unittest.TestCase):
     def test_creates_map_data_type(self) -> None:
         map_type = MapDataType(
-            identifier="StringToIntMap",
+            qualified_name="StringToIntMap",
             source_kind=DataTypeSource.FRANCA,
             key_type=PrimitiveDataType.STRING,
             value_type=PrimitiveDataType.INT32,
@@ -34,9 +34,9 @@ class TestMapDataType(unittest.TestCase):
         self.assertEqual(map_type.value_type, PrimitiveDataType.INT32)
 
     def test_supports_declared_type_ref_as_key_or_value_type(self) -> None:
-        value_struct = StructDataType(identifier="Payload", source_kind=DataTypeSource.FRANCA)
+        value_struct = StructDataType(qualified_name="Payload", source_kind=DataTypeSource.FRANCA)
         map_type = MapDataType(
-            identifier="PayloadMap",
+            qualified_name="PayloadMap",
             source_kind=DataTypeSource.FRANCA,
             key_type=PrimitiveDataType.STRING,
             value_type=value_struct,

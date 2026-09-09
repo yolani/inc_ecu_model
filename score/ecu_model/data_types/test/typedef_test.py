@@ -22,7 +22,7 @@ from score.ecu_model.data_types.typedef import TypedefDataType
 class TestTypedefDataType(unittest.TestCase):
     def test_creates_typedef_pointing_to_primitive(self) -> None:
         typedef = TypedefDataType(
-            identifier="UserId",
+            qualified_name="UserId",
             source_kind=DataTypeSource.FRANCA,
             data_type=PrimitiveDataType.UINT64,
         )
@@ -32,9 +32,9 @@ class TestTypedefDataType(unittest.TestCase):
         self.assertEqual(typedef.data_type, PrimitiveDataType.UINT64)
 
     def test_supports_declared_type_ref_as_aliased_data_type(self) -> None:
-        target_struct = StructDataType(identifier="Point", source_kind=DataTypeSource.FRANCA)
+        target_struct = StructDataType(qualified_name="Point", source_kind=DataTypeSource.FRANCA)
         typedef = TypedefDataType(
-            identifier="PointAlias",
+            qualified_name="PointAlias",
             source_kind=DataTypeSource.FRANCA,
             data_type=target_struct,
         )

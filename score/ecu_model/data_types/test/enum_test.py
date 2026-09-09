@@ -28,7 +28,7 @@ class TestEnumDataType(unittest.TestCase):
 
     def test_defaults_to_uint32_and_keeps_declared_literals(self) -> None:
         data_type = EnumDataType(
-            identifier="Gear",
+            qualified_name="Gear",
             source_kind=DataTypeSource.FRANCA,
             values=[self._value("PARK", 0), self._value("DRIVE", 1)],
         )
@@ -43,7 +43,7 @@ class TestEnumDataType(unittest.TestCase):
 
     def test_prevents_in_place_literal_mutation(self) -> None:
         data_type = EnumDataType(
-            identifier="Gear",
+            qualified_name="Gear",
             source_kind=DataTypeSource.FRANCA,
             values=[self._value("PARK", 0)],
         )
@@ -55,7 +55,7 @@ class TestEnumDataType(unittest.TestCase):
 
     def test_reassignment_validates_literal_value_definitions(self) -> None:
         data_type = EnumDataType(
-            identifier="Gear",
+            qualified_name="Gear",
             source_kind=DataTypeSource.FRANCA,
             values=[self._value("PARK", 0)],
         )
@@ -70,7 +70,7 @@ class TestEnumDataType(unittest.TestCase):
             ValidationError, "enum values must either all be explicitly defined or all be omitted"
         ):
             EnumDataType(
-                identifier="Gear",
+                qualified_name="Gear",
                 source_kind=DataTypeSource.FRANCA,
                 values=[self._value("PARK", 0), self._value("DRIVE")],
             )
@@ -78,7 +78,7 @@ class TestEnumDataType(unittest.TestCase):
     def test_rejects_duplicate_literal_identifiers(self) -> None:
         with self.assertRaisesRegex(ValidationError, "enum value identifiers must be unique"):
             EnumDataType(
-                identifier="Gear",
+                qualified_name="Gear",
                 source_kind=DataTypeSource.FRANCA,
                 values=[self._value("PARK", 0), self._value("PARK", 1)],
             )
@@ -86,15 +86,15 @@ class TestEnumDataType(unittest.TestCase):
     def test_rejects_duplicate_explicit_literal_values(self) -> None:
         with self.assertRaisesRegex(ValidationError, "explicit enum values must be unique"):
             EnumDataType(
-                identifier="Gear",
+                qualified_name="Gear",
                 source_kind=DataTypeSource.FRANCA,
                 values=[self._value("PARK", 0), self._value("DRIVE", 0)],
             )
 
     def test_supports_extending_another_declared_enum(self) -> None:
-        parent = EnumDataType(identifier="BaseGear", source_kind=DataTypeSource.FRANCA)
+        parent = EnumDataType(qualified_name="BaseGear", source_kind=DataTypeSource.FRANCA)
         child = EnumDataType(
-            identifier="Gear",
+            qualified_name="Gear",
             source_kind=DataTypeSource.FRANCA,
             extends=parent,
         )
@@ -102,11 +102,11 @@ class TestEnumDataType(unittest.TestCase):
         self.assertIs(child.extends, parent)
 
     def test_rejects_extending_base_type_of_different_kind(self) -> None:
-        parent_struct = StructDataType(identifier="BaseStruct", source_kind=DataTypeSource.FRANCA)
+        parent_struct = StructDataType(qualified_name="BaseStruct", source_kind=DataTypeSource.FRANCA)
 
         with self.assertRaisesRegex(ValidationError, "can only extend another enum data type"):
             EnumDataType(
-                identifier="ChildEnum",
+                qualified_name="ChildEnum",
                 source_kind=DataTypeSource.FRANCA,
                 extends=parent_struct,
             )
@@ -117,7 +117,7 @@ class TestEnumDataType(unittest.TestCase):
 
     def test_accepts_negative_literal_values(self) -> None:
         data_type = EnumDataType(
-            identifier="Gear",
+            qualified_name="Gear",
             source_kind=DataTypeSource.FRANCA,
             values=[self._value("REVERSE", -1), self._value("PARK", 0)],
         )
@@ -127,7 +127,7 @@ class TestEnumDataType(unittest.TestCase):
     def test_rejects_literal_identifier_invalid_for_source_language(self) -> None:
         with self.assertRaisesRegex(ValidationError, "Invalid identifier '1PARK'"):
             EnumDataType(
-                identifier="Gear",
+                qualified_name="Gear",
                 source_kind=DataTypeSource.FRANCA,
                 values=[self._value("1PARK")],
             )

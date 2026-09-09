@@ -11,11 +11,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-from collections.abc import Sequence
 from enum import Enum
 from typing import Any
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 
 from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.primitives import PrimitiveDataType
@@ -68,8 +67,7 @@ class DataTypeBase(ModelElement):
     source_kind: DataTypeSource = Field(
         description="Origin of the data type definition, e.g. franca, protobuf, etc.",
     )
-    qualified_name: Identifier | FullyQualifiedName | None = Field(
-        default=None,
+    qualified_name: Identifier | FullyQualifiedName = Field(
         description="Identifier of the data type, optionally qualified by its enclosing namespace",
     )
     source_uri: str | None = Field(
@@ -82,62 +80,10 @@ class DataTypeBase(ModelElement):
     )
 
     def model_post_init(self, context: Any, /) -> None:
-        """Reject instantiation of this abstract base before registry insertion."""
+        """Reject direct instantiation of the abstract base type."""
         if type(self) is DataTypeBase:
             raise TypeError("DataTypeBase is abstract, instantiate a concrete data type")
-        if self.qualified_name is None and self.kind != DataTypeKind.ARRAY:
-            raise ValueError("Input should be a valid string: declared data types require an identifier")
         super().model_post_init(context)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _combine_identifier_and_namespace(cls, data: Any) -> Any:
-        """Accept separate identifier/namespace constructor kwargs and combine them into `name`."""
-        if not isinstance(data, dict):
-            return data
-        if "name" in data and "identifier" not in data and "namespace" not in data:
-            data["qualified_name"] = data.pop("name")
-            return data
-        if "identifier" not in data and "namespace" not in data:
-            return data
-        identifier = data.pop("identifier", None)
-        namespace = data.pop("namespace", None)
-        source_kind = data.get("source_kind", cls.model_fields["source_kind"].default)
-        data["qualified_name"] = cls._qualify(identifier, namespace, source_kind)
-        data.pop("name", None)
-        return data
-
-    @classmethod
-    def _qualify(
-        cls,
-        identifier: Identifier | str | None,
-        namespace: str | Sequence[Identifier | str] | None,
-        source_kind: DataTypeSource | None,
-    ) -> Identifier | FullyQualifiedName | None:
-        """Combine an identifier with an optional namespace into a single name."""
-        if namespace is None:
-            return identifier
-        if identifier is None:
-            raise ValueError("namespace requires an identifier")
-        if isinstance(namespace, str):
-            if source_kind is None:
-                raise ValueError("source_kind is required for string namespaces")
-            namespace = namespace.split(DataTypeSource(source_kind).separator)
-        segments = namespace
-        return FullyQualifiedName(
-            identifier=cls._as_identifier(identifier),
-            namespace=tuple(cls._as_identifier(segment) for segment in segments),
-        )
-
-    @staticmethod
-    def _as_identifier(value: Identifier | str) -> Identifier:
-        """Return the value as an Identifier, validating a plain string on the way."""
-        return value if isinstance(value, Identifier) else Identifier(value)
-
-    @staticmethod
-    def _get_separator(source_kind: DataTypeSource) -> str:
-        """Keep the former helper available while separator logic lives on the source kind."""
-        return DataTypeSource(source_kind).separator
 
     @field_validator("source_uri")
     @classmethod
@@ -152,12 +98,12 @@ class DataTypeBase(ModelElement):
             raise ValueError("source_uri must not contain null bytes")
         return stripped
 
+    # TODO: cleanup the following properties for backwards compatibility with the former data type model.
     @property
     def identifier(self) -> Identifier | None:
         """Return the local identifier, independent of any enclosing namespace."""
         return getattr(self.qualified_name, "identifier", self.qualified_name)
 
-    # TODO: only for backwards compatibility, consider removing this property in the future.
     @property
     def name(self) -> Identifier | None:
         """Return the local identifier for compatibility with the former data type model."""
@@ -167,11 +113,6 @@ class DataTypeBase(ModelElement):
     def namespace(self) -> tuple[Identifier, ...] | None:
         """Return the enclosing namespace segments, or None if the name is unqualified."""
         return self.qualified_name.namespace if isinstance(self.qualified_name, FullyQualifiedName) else None
-
-    @namespace.setter
-    def namespace(self, namespace: str | Sequence[Identifier | str] | None) -> None:
-        """Requalify the existing identifier, for producers that learn the namespace only later."""
-        self.qualified_name = self._qualify(self.identifier, namespace, self.source_kind)
 
     @property
     def fully_qualified_name(self) -> str:

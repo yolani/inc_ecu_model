@@ -17,9 +17,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from score.ecu_model.data_types.identifier import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
-    Identifier,
+    ValidIdentifier,
 )
 from score.parsers.franca_parser.model.fdepl.specification import (
     DeploymentSpecification,
@@ -30,7 +30,7 @@ from score.parsers.franca_parser.model.fdepl.specification import (
 class DeploymentParameter:
     """A deployment-property assignment."""
 
-    name: Identifier
+    name: ValidIdentifier
     value: object | None = None
 
 

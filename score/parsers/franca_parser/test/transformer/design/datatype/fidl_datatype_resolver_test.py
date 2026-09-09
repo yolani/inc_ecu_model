@@ -16,9 +16,9 @@
 from pathlib import Path
 import unittest
 
-from score.ecu_model.data_types.identifier import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
-    Identifier,
+    ValidIdentifier,
 )
 from score.ecu_model.data_types.common import DataTypeSource
 from score.ecu_model.data_types.struct import StructDataType
@@ -44,14 +44,14 @@ def qualified_name(value: str) -> FullyQualifiedName:
 def type_collection(name: str | None, *datatypes: StructDataType) -> TypeCollection:
     """Create a FIDL type collection containing the supplied definitions."""
     return TypeCollection(
-        name=Identifier(name) if name is not None else None,
+        name=ValidIdentifier(name) if name is not None else None,
         datatypes=list(datatypes),
     )
 
 
 def struct(name: str) -> StructDataType:
     """Create a minimal datatype definition for resolver behavior tests."""
-    return StructDataType(identifier=name, source_kind=DataTypeSource.FRANCA)
+    return StructDataType(qualified_name=name, source_kind=DataTypeSource.FRANCA)
 
 
 class FIDLDataTypeResolverTest(unittest.TestCase):

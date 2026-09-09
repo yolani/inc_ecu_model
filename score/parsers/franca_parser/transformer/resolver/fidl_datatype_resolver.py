@@ -18,7 +18,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from score.ecu_model.data_types.identifier import FullyQualifiedName
+from score.parsers.franca_parser.model.franca_name_types import FullyQualifiedName
 from score.ecu_model.data_types.common import DataTypeBase
 from score.parsers.franca_parser.model.fidl.fidl_file import (
     FIDLFileModel,

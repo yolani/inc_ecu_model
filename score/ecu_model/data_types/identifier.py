@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from pydantic import ConfigDict, Field, RootModel, field_validator, model_validator
+from pydantic import ConfigDict, Field, RootModel, field_validator
 from pydantic_core import core_schema
 
 from score.ecu_model.model import ModelElement
@@ -73,28 +73,6 @@ class FullyQualifiedName(ModelElement):
         description="Enclosing namespace segments, outer-to-inner; empty for a name used without its namespace",
     )
 
-    @model_validator(mode="before")
-    @classmethod
-    def _accept_flat_segments(cls, data: Any) -> Any:
-        """Accept the flat segment sequence source languages spell a name with, as an alternative to the split form."""
-        if not isinstance(data, dict) or "names" not in data:
-            return data
-        segments = [name if isinstance(name, Identifier) else Identifier(name) for name in data["names"]]
-        if not segments:
-            raise ValueError("A qualified name needs at least one segment")
-        *namespace, identifier = segments
-        return {
-            **{key: value for key, value in data.items() if key != "names"},
-            "identifier": identifier,
-            "namespace": Namespace(namespace),
-        }
-
-    # TODO: rename to segments?
-    @property
-    def names(self) -> list[Identifier]:
-        """Return all segments, namespace first and identifier last."""
-        return [*self.namespace, self.identifier]
-
     def render(self, separator: str) -> str:
         """Render the fully qualified name as text, joined by the given source-language separator."""
         return separator.join(str(segment) for segment in (*self.namespace, self.identifier))
@@ -102,19 +80,6 @@ class FullyQualifiedName(ModelElement):
     @property
     def as_str(self) -> str:
         return self.render(".")
-
-    @property
-    def as_path(self) -> str:
-        return self.render("/")
-
-    def __eq__(self, other: object) -> bool:
-        """Compare names by their segments; the element id identifies the record, not the name it carries."""
-        if not isinstance(other, FullyQualifiedName):
-            return NotImplemented
-        return (self.namespace, self.identifier) == (other.namespace, other.identifier)
-
-    def __hash__(self) -> int:
-        return hash((self.namespace, self.identifier))
 
     def __str__(self) -> str:
         return self.as_str

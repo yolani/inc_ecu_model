@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from score.ecu_model.data_types.identifier import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
 )
 from score.parsers.franca_parser.model.fdepl.fdepl_file import (

@@ -35,7 +35,7 @@ class TestCompositeDataType(unittest.TestCase):
     def test_rejects_direct_instantiation_of_the_abstract_base(self) -> None:
         with self.assertRaisesRegex(TypeError, "CompositeDataType is abstract"):
             CompositeDataType(
-                identifier="Position",
+                qualified_name="Position",
                 kind=DataTypeKind.STRUCT,
                 source_kind=DataTypeSource.FRANCA,
             )
@@ -45,7 +45,7 @@ class TestCompositeDataType(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             CompositeDataType(
-                identifier="Position",
+                qualified_name="Position",
                 kind=DataTypeKind.STRUCT,
                 source_kind=DataTypeSource.FRANCA,
             )
@@ -55,14 +55,14 @@ class TestCompositeDataType(unittest.TestCase):
     def test_rejects_invalid_or_duplicate_field_identifiers(self) -> None:
         with self.assertRaisesRegex(ValidationError, "Invalid identifier '1field'"):
             StructDataType(
-                identifier="Position",
+                qualified_name="Position",
                 source_kind=DataTypeSource.FRANCA,
                 fields=[self._field("1field")],
             )
 
         with self.assertRaisesRegex(ValidationError, "field identifiers must be unique"):
             StructDataType(
-                identifier="Position",
+                qualified_name="Position",
                 source_kind=DataTypeSource.FRANCA,
                 fields=[self._field("field"), self._field("field")],
             )
@@ -72,14 +72,14 @@ class TestCompositeDataType(unittest.TestCase):
             ValidationError, "field numbers must either all be explicitly defined or all be omitted"
         ):
             StructDataType(
-                identifier="Position",
+                qualified_name="Position",
                 source_kind=DataTypeSource.PROTOBUF,
                 fields=[self._field("x", 1), self._field("y")],
             )
 
         with self.assertRaisesRegex(ValidationError, "explicit field numbers must be unique"):
             StructDataType(
-                identifier="Position",
+                qualified_name="Position",
                 source_kind=DataTypeSource.PROTOBUF,
                 fields=[self._field("x", 1), self._field("y", 1)],
             )
@@ -93,7 +93,7 @@ class TestCompositeDataType(unittest.TestCase):
 
     def test_revalidates_fields_on_assignment(self) -> None:
         data_type = StructDataType(
-            identifier="Position",
+            qualified_name="Position",
             source_kind=DataTypeSource.FRANCA,
             fields=[self._field("field")],
         )
@@ -102,9 +102,9 @@ class TestCompositeDataType(unittest.TestCase):
             data_type.fields = (self._field("field"), self._field("field"))
 
     def test_allows_franca_inheritance_only(self) -> None:
-        parent = StructDataType(identifier="BasePosition", source_kind=DataTypeSource.FRANCA)
+        parent = StructDataType(qualified_name="BasePosition", source_kind=DataTypeSource.FRANCA)
         child = StructDataType(
-            identifier="Position",
+            qualified_name="Position",
             source_kind=DataTypeSource.FRANCA,
             extends=parent,
         )
@@ -114,27 +114,27 @@ class TestCompositeDataType(unittest.TestCase):
             ValidationError, "StructDataType inheritance is only allowed for FRANCA source kind"
         ):
             StructDataType(
-                identifier="Position",
+                qualified_name="Position",
                 source_kind=DataTypeSource.PROTOBUF,
                 extends=parent,
             )
 
     def test_rejects_extending_base_type_of_different_kind(self) -> None:
-        parent_enum = EnumDataType(identifier="BaseEnum", source_kind=DataTypeSource.FRANCA)
+        parent_enum = EnumDataType(qualified_name="BaseEnum", source_kind=DataTypeSource.FRANCA)
 
         with self.assertRaisesRegex(ValidationError, "can only extend another data type of kind 'struct'"):
             StructDataType(
-                identifier="ChildStruct",
+                qualified_name="ChildStruct",
                 source_kind=DataTypeSource.FRANCA,
                 extends=parent_enum,
             )
 
     def test_accepts_elements_in_place_of_references(self) -> None:
-        parent = StructDataType(identifier="BasePosition", source_kind=DataTypeSource.FRANCA)
+        parent = StructDataType(qualified_name="BasePosition", source_kind=DataTypeSource.FRANCA)
         field = DataTypeField(identifier="x", data_type=PrimitiveDataType.UINT32)
 
         data_type = StructDataType(
-            identifier="Position",
+            qualified_name="Position",
             source_kind=DataTypeSource.FRANCA,
             extends=parent,
             fields=[field],

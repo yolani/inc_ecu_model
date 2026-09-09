@@ -38,7 +38,7 @@ class TestUnionDataType(unittest.TestCase):
 
     def test_keeps_declared_fields_in_order(self) -> None:
         data_type = UnionDataType(
-            identifier="Measurement",
+            qualified_name="Measurement",
             source_kind=DataTypeSource.PROTOBUF,
             fields=[self._field("distance", field_number=1), self._field("angle", field_number=2)],
         )
@@ -51,7 +51,7 @@ class TestUnionDataType(unittest.TestCase):
     def test_rejects_optional_fields(self) -> None:
         with self.assertRaisesRegex(ValidationError, "union fields must not be declared optional"):
             UnionDataType(
-                identifier="Measurement",
+                qualified_name="Measurement",
                 source_kind=DataTypeSource.FRANCA,
                 fields=[self._field("distance", optional=True)],
             )

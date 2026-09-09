@@ -22,7 +22,7 @@ from score.ecu_model.data_types.common import (
     DataTypeSource,
     DataType,
 )
-from score.ecu_model.data_types.identifier import Identifier
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.model import ModelRegistry
 
@@ -50,14 +50,10 @@ class TestDataTypeBaseCommon(unittest.TestCase):
         self.assertEqual(str(DataTypeSource.FRANCA), "franca")
         self.assertEqual(str(DataTypeSource.CPP_HEADER_FILE), "cpp_header_file")
 
-    def test_unsupported_source_kind_raises_value_error(self) -> None:
-        with self.assertRaises(ValueError):
-            DataTypeBase._get_separator("unsupported_source_kind")  # type: ignore[arg-type]
-
     def test_optional_fields_defaults_and_values(self) -> None:
         data_type = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="MyStruct",
+            qualified_name="MyStruct",
             source_kind=DataTypeSource.FRANCA,
             source_uri="some/relative/path.fidl",
             deployment_properties={"key": "value"},
@@ -69,7 +65,7 @@ class TestDataTypeBaseCommon(unittest.TestCase):
         with self.assertRaises(ValidationError) as ctx:
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="MyStruct",
+                qualified_name="MyStruct",
                 source_kind=DataTypeSource.FRANCA,
                 source_uri="   ",
             )
@@ -78,7 +74,7 @@ class TestDataTypeBaseCommon(unittest.TestCase):
         with self.assertRaises(ValidationError) as ctx:
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="MyStruct",
+                qualified_name="MyStruct",
                 source_kind=DataTypeSource.FRANCA,
                 source_uri="invalid\x00path",
             )
@@ -88,7 +84,7 @@ class TestDataTypeBaseCommon(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, "DataTypeBase is abstract"):
             DataTypeBase(
                 kind=DataTypeKind.STRUCT,
-                identifier="MyStruct",
+                qualified_name="MyStruct",
                 source_kind=DataTypeSource.FRANCA,
             )
 
@@ -96,76 +92,10 @@ class TestDataTypeBaseCommon(unittest.TestCase):
         with self.assertRaises(ValidationError) as ctx:
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier=None,  # type: ignore[arg-type]
+                qualified_name=None,  # type: ignore[arg-type]
                 source_kind=DataTypeSource.FRANCA,
             )
         self.assertIn("Input should be a valid string", str(ctx.exception))
-
-
-class TestNamespaceAssignment(unittest.TestCase):
-    @staticmethod
-    def _unqualified_struct() -> StructDataType:
-        return StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
-
-    def test_assigns_namespace_from_a_separated_string(self) -> None:
-        data_type = self._unqualified_struct()
-
-        data_type.namespace = "app.geometry"
-
-        self.assertEqual(data_type.fully_qualified_name, "app.geometry.Position")
-
-    def test_assigns_namespace_from_identifier_segments(self) -> None:
-        data_type = self._unqualified_struct()
-
-        data_type.namespace = (Identifier("app"), Identifier("geometry"))
-
-        self.assertEqual(data_type.fully_qualified_name, "app.geometry.Position")
-
-    def test_uses_the_separator_of_the_source_kind(self) -> None:
-        data_type = StructDataType(identifier="Position", source_kind=DataTypeSource.CPP_HEADER_FILE)
-
-        data_type.namespace = "app::geometry"
-
-        self.assertEqual(data_type.namespace, (Identifier("app"), Identifier("geometry")))
-
-    def test_replaces_a_previously_assigned_namespace(self) -> None:
-        data_type = StructDataType(
-            identifier="Position",
-            namespace="app.geometry",
-            source_kind=DataTypeSource.FRANCA,
-        )
-
-        data_type.namespace = "app.routing"
-
-        self.assertEqual(data_type.fully_qualified_name, "app.routing.Position")
-
-    def test_clears_the_namespace(self) -> None:
-        data_type = StructDataType(
-            identifier="Position",
-            namespace="app.geometry",
-            source_kind=DataTypeSource.FRANCA,
-        )
-
-        data_type.namespace = None
-
-        self.assertIsNone(data_type.namespace)
-        self.assertEqual(data_type.fully_qualified_name, "Position")
-
-    def test_rejects_an_invalid_namespace_segment(self) -> None:
-        data_type = self._unqualified_struct()
-
-        with self.assertRaisesRegex(ValidationError, "Invalid identifier '1app'"):
-            data_type.namespace = "1app.geometry"
-
-    def test_keeps_the_element_registered_once(self) -> None:
-        data_type = self._unqualified_struct()
-        registered_elements = len(ModelRegistry.elements)
-
-        data_type.namespace = "app.geometry"
-
-        # Only the new FullyQualifiedName is added; the data type must not be registered twice.
-        self.assertEqual(len(ModelRegistry.elements), registered_elements + 1)
-        self.assertIs(ModelRegistry.elements[data_type.id], data_type)
 
 
 class TestTypeRef(unittest.TestCase):
@@ -175,7 +105,7 @@ class TestTypeRef(unittest.TestCase):
         self.assertIs(self.adapter.validate_python("uint32"), PrimitiveDataType.UINT32)
 
     def test_declared_type_is_referenced_by_direct_instance(self) -> None:
-        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        definition = StructDataType(qualified_name="Position", source_kind=DataTypeSource.FRANCA)
 
         ref = self.adapter.validate_python(definition)
 
@@ -188,7 +118,7 @@ class TestTypeRef(unittest.TestCase):
 
 class TestDirectDataTypeReferences(unittest.TestCase):
     def test_reference_is_the_same_object_as_the_target(self) -> None:
-        definition = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        definition = StructDataType(qualified_name="Position", source_kind=DataTypeSource.FRANCA)
 
         member = StructMember(identifier="position", type=definition)
 
@@ -209,8 +139,9 @@ class TestPickleRoundTrip(unittest.TestCase):
     @staticmethod
     def _build_type_graph() -> tuple[DataTypeBase, DataTypeBase]:
         position = StructDataType(
-            identifier="Position",
-            namespace="app.geometry",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("Position"), namespace=(Identifier("app"), Identifier("geometry"))
+            ),
             source_kind=DataTypeSource.FRANCA,
             members=[
                 StructMember(identifier="x", type=PrimitiveDataType.FLOAT),
@@ -218,8 +149,9 @@ class TestPickleRoundTrip(unittest.TestCase):
             ],
         )
         waypoint = StructDataType(
-            identifier="Waypoint",
-            namespace="app.routing",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("Waypoint"), namespace=(Identifier("app"), Identifier("routing"))
+            ),
             source_kind=DataTypeSource.FRANCA,
             members=[
                 StructMember(identifier="position", type=position),

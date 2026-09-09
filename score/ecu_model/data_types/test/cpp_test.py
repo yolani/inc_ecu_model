@@ -14,6 +14,7 @@
 import unittest
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.struct import StructDataType
 
 
@@ -21,38 +22,44 @@ class TestCppValidation(unittest.TestCase):
     def test_cpp_identifier_and_namespace_are_validated(self) -> None:
         StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="_value2",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("_value2"),
+                namespace=(Identifier("app"), Identifier("geometry")),
+            ),
             source_kind=DataTypeSource.CPP_HEADER_FILE,
-            namespace="app::geometry",
         )
 
         with self.assertRaises(ValueError):
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="with-dash",
+                qualified_name="with-dash",
                 source_kind=DataTypeSource.CPP_HEADER_FILE,
             )
 
         with self.assertRaises(ValueError):
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="Position",
+                qualified_name=FullyQualifiedName(
+                    identifier=Identifier("Position"),
+                    namespace=(Identifier("app"), Identifier("geometry"), Identifier("")),
+                ),
                 source_kind=DataTypeSource.CPP_HEADER_FILE,
-                namespace="app::geometry::",
             )
 
     def test_cpp_fully_qualified_name(self) -> None:
         dt1 = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="Vector3D",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("Vector3D"),
+                namespace=(Identifier("app"), Identifier("geometry")),
+            ),
             source_kind=DataTypeSource.CPP_HEADER_FILE,
-            namespace="app::geometry",
         )
         self.assertEqual(dt1.fully_qualified_name, "app::geometry::Vector3D")
 
         dt2 = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="Vector3D",
+            qualified_name="Vector3D",
             source_kind=DataTypeSource.CPP_HEADER_FILE,
         )
         self.assertEqual(dt2.fully_qualified_name, "Vector3D")

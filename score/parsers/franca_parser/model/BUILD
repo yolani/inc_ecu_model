@@ -26,6 +26,7 @@ py_library(
         "fidl/fidl_file.py",
         "fidl/type_collection.py",
         "franca_file.py",
+        "franca_name_types.py",
         "parsed_file.py",
     ],
     visibility = [

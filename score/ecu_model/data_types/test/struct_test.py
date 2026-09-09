@@ -30,7 +30,7 @@ class TestStructDataType(unittest.TestCase):
 
     def test_keeps_declared_fields_in_order(self) -> None:
         data_type = StructDataType(
-            identifier="Position",
+            qualified_name="Position",
             source_kind=DataTypeSource.PROTOBUF,
             fields=[self._field("x", field_number=1), self._field("y", field_number=2)],
         )
@@ -48,9 +48,9 @@ class TestStructDataType(unittest.TestCase):
         self.assertEqual(field.deployment_properties, {})
 
     def test_supports_declared_data_types_as_field_type(self) -> None:
-        nested = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        nested = StructDataType(qualified_name="Position", source_kind=DataTypeSource.FRANCA)
         data_type = StructDataType(
-            identifier="Pose",
+            qualified_name="Pose",
             source_kind=DataTypeSource.FRANCA,
             fields=[self._field("position", nested)],
         )
@@ -59,7 +59,7 @@ class TestStructDataType(unittest.TestCase):
 
     def test_prevents_in_place_field_mutation(self) -> None:
         data_type = StructDataType(
-            identifier="Position",
+            qualified_name="Position",
             source_kind=DataTypeSource.FRANCA,
             fields=[self._field("x")],
         )

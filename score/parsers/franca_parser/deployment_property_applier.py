@@ -17,7 +17,7 @@ import logging
 
 from score.ecu_model.data_types.common import DataTypeBase
 from score.ecu_model.data_types.composite import DataTypeField
-from score.ecu_model.data_types.identifier import Identifier
+from score.parsers.franca_parser.model.franca_name_types import ValidIdentifier
 from score.parsers.franca_parser.model.fdepl.definition import (
     DeploymentElement,
     DeploymentParameter,
@@ -166,13 +166,15 @@ class DeploymentPropertyApplier:
         if property_type is DeploymentPropertyType.BOOLEAN:
             return isinstance(value, bool)
         if property_type is DeploymentPropertyType.ENUM:
-            return isinstance(value, Identifier) and value in declaration.type_reference.enumerators
+            return isinstance(value, ValidIdentifier) and value in declaration.type_reference.enumerators
         return True
 
     @staticmethod
     def _normalize_value(value: object, declaration: ParameterDeclaration) -> object:
         if isinstance(value, list):
             return [DeploymentPropertyApplier._normalize_value(item, declaration) for item in value]
-        if declaration.type_reference.property_type is DeploymentPropertyType.ENUM and isinstance(value, Identifier):
+        if declaration.type_reference.property_type is DeploymentPropertyType.ENUM and isinstance(
+            value, ValidIdentifier
+        ):
             return value.as_str
         return value

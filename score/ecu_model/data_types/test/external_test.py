@@ -16,14 +16,17 @@ import unittest
 from pydantic import ValidationError
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.external import ExternalDataType
 
 
 class TestExternalDataType(unittest.TestCase):
     def test_creates_external_data_type(self) -> None:
         data_type = ExternalDataType(
-            identifier="AbortTransfer",
-            namespace="adp::managed_data_transfer",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("AbortTransfer"),
+                namespace=(Identifier("adp"), Identifier("managed_data_transfer")),
+            ),
             header="adp/managed_data_transfer/types.h",
         )
 
@@ -35,33 +38,33 @@ class TestExternalDataType(unittest.TestCase):
         self.assertEqual(data_type.header, "adp/managed_data_transfer/types.h")
 
     def test_keeps_a_bracketed_include_verbatim(self) -> None:
-        data_type = ExternalDataType(identifier="Point", header="<geometry/point.hpp>")
+        data_type = ExternalDataType(qualified_name="Point", header="<geometry/point.hpp>")
 
         self.assertEqual(data_type.header, "<geometry/point.hpp>")
 
     def test_requires_a_header(self) -> None:
         with self.assertRaises(ValidationError):
-            ExternalDataType(identifier="Point")  # type: ignore[call-arg]
+            ExternalDataType(qualified_name="Point")  # type: ignore[call-arg]
 
     def test_defaults_to_no_bazel_target(self) -> None:
-        data_type = ExternalDataType(identifier="Point", header="geometry/point.hpp")
+        data_type = ExternalDataType(qualified_name="Point", header="geometry/point.hpp")
 
         self.assertIsNone(data_type.bazel_target)
 
     def test_accepts_bazel_labels(self) -> None:
         for label in ("//geometry:point", "@third_party//geometry:point", ":point", "//geometry"):
             with self.subTest(label=label):
-                data_type = ExternalDataType(identifier="Point", header="geometry/point.hpp", bazel_target=label)
+                data_type = ExternalDataType(qualified_name="Point", header="geometry/point.hpp", bazel_target=label)
 
                 self.assertEqual(data_type.bazel_target, label)
 
     def test_rejects_an_invalid_bazel_label(self) -> None:
         with self.assertRaisesRegex(ValidationError, "bazel_target must be a valid Bazel label"):
-            ExternalDataType(identifier="Point", header="geometry/point.hpp", bazel_target="geometry:point")
+            ExternalDataType(qualified_name="Point", header="geometry/point.hpp", bazel_target="geometry:point")
 
     def test_rejects_a_blank_bazel_label(self) -> None:
         with self.assertRaisesRegex(ValidationError, "bazel_target must not be empty when provided"):
-            ExternalDataType(identifier="Point", header="geometry/point.hpp", bazel_target="   ")
+            ExternalDataType(qualified_name="Point", header="geometry/point.hpp", bazel_target="   ")
 
 
 if __name__ == "__main__":

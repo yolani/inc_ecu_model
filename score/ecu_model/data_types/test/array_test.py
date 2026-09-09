@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from score.ecu_model.data_types.array import ArrayDataType
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.primitives import PrimitiveDataType
 from score.ecu_model.data_types.struct import StructDataType
 
@@ -24,7 +25,7 @@ from score.ecu_model.data_types.struct import StructDataType
 class TestArrayDataType(unittest.TestCase):
     def test_creates_named_non_inline_array(self) -> None:
         array_type = ArrayDataType(
-            identifier="IntArray",
+            qualified_name="IntArray",
             source_kind=DataTypeSource.FRANCA,
             data_type=PrimitiveDataType.INT32,
             dimension_min=0,
@@ -56,7 +57,7 @@ class TestArrayDataType(unittest.TestCase):
     def test_rejects_inline_array_with_identifier(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             ArrayDataType(
-                identifier="BadInline",
+                qualified_name="BadInline",
                 source_kind=DataTypeSource.FRANCA,
                 data_type=PrimitiveDataType.UINT8,
                 is_inline=True,
@@ -66,12 +67,15 @@ class TestArrayDataType(unittest.TestCase):
     def test_rejects_inline_array_with_namespace(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             ArrayDataType(
-                namespace="com.example",
+                qualified_name=FullyQualifiedName(
+                    identifier=Identifier("InlineArray"),
+                    namespace=(Identifier("com"), Identifier("example")),
+                ),
                 source_kind=DataTypeSource.FRANCA,
                 data_type=PrimitiveDataType.UINT8,
                 is_inline=True,
             )
-        self.assertIn("namespace requires an identifier", str(ctx.exception))
+        self.assertIn("inline arrays must not have an identifier", str(ctx.exception))
 
     def test_rejects_non_inline_array_without_identifier(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
@@ -85,7 +89,7 @@ class TestArrayDataType(unittest.TestCase):
     def test_rejects_negative_dimension_bounds(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             ArrayDataType(
-                identifier="NegativeBounds",
+                qualified_name="NegativeBounds",
                 source_kind=DataTypeSource.FRANCA,
                 data_type=PrimitiveDataType.UINT8,
                 dimension_min=-1,
@@ -95,7 +99,7 @@ class TestArrayDataType(unittest.TestCase):
     def test_rejects_invalid_dimension_range(self) -> None:
         with self.assertRaises(ValidationError) as ctx:
             ArrayDataType(
-                identifier="BadRange",
+                qualified_name="BadRange",
                 source_kind=DataTypeSource.FRANCA,
                 data_type=PrimitiveDataType.UINT8,
                 dimension_min=10,
@@ -104,9 +108,9 @@ class TestArrayDataType(unittest.TestCase):
         self.assertIn("dimension_min must not be greater than dimension_max", str(ctx.exception))
 
     def test_supports_declared_type_ref_as_element_data_type(self) -> None:
-        element_struct = StructDataType(identifier="Point", source_kind=DataTypeSource.FRANCA)
+        element_struct = StructDataType(qualified_name="Point", source_kind=DataTypeSource.FRANCA)
         array_type = ArrayDataType(
-            identifier="PointArray",
+            qualified_name="PointArray",
             source_kind=DataTypeSource.FRANCA,
             data_type=element_struct,
         )

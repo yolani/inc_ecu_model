@@ -14,6 +14,7 @@
 import unittest
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.struct import StructDataType
 
 
@@ -21,38 +22,44 @@ class TestProtobufValidation(unittest.TestCase):
     def test_protobuf_identifier_and_package_are_validated(self) -> None:
         StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="MyMessage",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("MyMessage"),
+                namespace=(Identifier("com"), Identifier("example"), Identifier("sensor")),
+            ),
             source_kind=DataTypeSource.PROTOBUF,
-            namespace="com.example.sensor",
         )
 
         with self.assertRaises(ValueError):
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="1invalid",
+                qualified_name="1invalid",
                 source_kind=DataTypeSource.PROTOBUF,
             )
 
         with self.assertRaises(ValueError):
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="MyMessage",
+                qualified_name=FullyQualifiedName(
+                    identifier=Identifier("MyMessage"),
+                    namespace=(Identifier("com"), Identifier(""), Identifier("example")),
+                ),
                 source_kind=DataTypeSource.PROTOBUF,
-                namespace="com..example",
             )
 
     def test_protobuf_fully_qualified_name(self) -> None:
         dt1 = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="MyMessage",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("MyMessage"),
+                namespace=(Identifier("com"), Identifier("example"), Identifier("sensor")),
+            ),
             source_kind=DataTypeSource.PROTOBUF,
-            namespace="com.example.sensor",
         )
         self.assertEqual(dt1.fully_qualified_name, "com.example.sensor.MyMessage")
 
         dt2 = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="MyMessage",
+            qualified_name="MyMessage",
             source_kind=DataTypeSource.PROTOBUF,
         )
         self.assertEqual(dt2.fully_qualified_name, "MyMessage")

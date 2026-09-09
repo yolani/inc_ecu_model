@@ -14,6 +14,7 @@
 import unittest
 
 from score.ecu_model.data_types.common import DataTypeKind, DataTypeSource
+from score.ecu_model.data_types.identifier import FullyQualifiedName, Identifier
 from score.ecu_model.data_types.struct import StructDataType
 
 
@@ -21,38 +22,44 @@ class TestFrancaValidation(unittest.TestCase):
     def test_franca_identifier_and_package_are_validated(self) -> None:
         StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="Position",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("Position"),
+                namespace=(Identifier("com"), Identifier("example"), Identifier("model")),
+            ),
             source_kind=DataTypeSource.FRANCA,
-            namespace="com.example.model",
         )
 
         with self.assertRaises(ValueError):
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="1invalid",
+                qualified_name="1invalid",
                 source_kind=DataTypeSource.FRANCA,
             )
 
         with self.assertRaises(ValueError):
             StructDataType(
                 kind=DataTypeKind.STRUCT,
-                identifier="Position",
+                qualified_name=FullyQualifiedName(
+                    identifier=Identifier("Position"),
+                    namespace=(Identifier("com"), Identifier(""), Identifier("example")),
+                ),
                 source_kind=DataTypeSource.FRANCA,
-                namespace="com..example",
             )
 
     def test_franca_fully_qualified_name(self) -> None:
         dt1 = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="Position",
+            qualified_name=FullyQualifiedName(
+                identifier=Identifier("Position"),
+                namespace=(Identifier("com"), Identifier("example"), Identifier("model")),
+            ),
             source_kind=DataTypeSource.FRANCA,
-            namespace="com.example.model",
         )
         self.assertEqual(dt1.fully_qualified_name, "com.example.model.Position")
 
         dt2 = StructDataType(
             kind=DataTypeKind.STRUCT,
-            identifier="Position",
+            qualified_name="Position",
             source_kind=DataTypeSource.FRANCA,
         )
         self.assertEqual(dt2.fully_qualified_name, "Position")

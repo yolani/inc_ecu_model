@@ -15,9 +15,9 @@
 
 import unittest
 
-from score.ecu_model.data_types.identifier import (
+from score.parsers.franca_parser.model.franca_name_types import (
     FullyQualifiedName,
-    Identifier,
+    ValidIdentifier,
 )
 from score.parsers.franca_parser.transformer.resolver.utils_resolver import (
     matches_named_element_reference,
@@ -73,7 +73,7 @@ class UtilsResolverTest(unittest.TestCase):
     def test_matches_named_element_reference_given_identifier_name_expect_match(self) -> None:
         matches = matches_named_element_reference(
             qualified_name("b.c.Element"),
-            Identifier("Element"),
+            ValidIdentifier("Element"),
             qualified_name("a.b.c"),
             qualified_name("a.b"),
         )

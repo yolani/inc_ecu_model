@@ -38,7 +38,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
         reference = Identifier("Position")
 
         typedef = TypedefDataType(
-            identifier="PositionAlias",
+            qualified_name="PositionAlias",
             source_kind=DataTypeSource.FRANCA,
             data_type=reference,
         )
@@ -49,7 +49,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
         reference = self._qualified_reference()
 
         typedef = TypedefDataType(
-            identifier="PositionAlias",
+            qualified_name="PositionAlias",
             source_kind=DataTypeSource.FRANCA,
             data_type=reference,
         )
@@ -58,11 +58,11 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
 
     def test_reference_is_replaceable_by_the_resolved_data_type(self) -> None:
         typedef = TypedefDataType(
-            identifier="PositionAlias",
+            qualified_name="PositionAlias",
             source_kind=DataTypeSource.FRANCA,
             data_type=self._qualified_reference(),
         )
-        resolved = StructDataType(identifier="Position", source_kind=DataTypeSource.FRANCA)
+        resolved = StructDataType(qualified_name="Position", source_kind=DataTypeSource.FRANCA)
 
         typedef.data_type = resolved
 
@@ -73,7 +73,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
         value_reference = self._qualified_reference()
 
         map_type = MapDataType(
-            identifier="PositionsByKey",
+            qualified_name="PositionsByKey",
             source_kind=DataTypeSource.FRANCA,
             key_type=key_reference,
             value_type=value_reference,
@@ -86,7 +86,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
         reference = self._qualified_reference()
 
         array = ArrayDataType(
-            identifier="Positions",
+            qualified_name="Positions",
             source_kind=DataTypeSource.FRANCA,
             data_type=reference,
         )
@@ -104,7 +104,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
         reference = self._qualified_reference()
 
         struct = StructDataType(
-            identifier="ExtendedPosition",
+            qualified_name="ExtendedPosition",
             source_kind=DataTypeSource.FRANCA,
             extends=reference,
         )
@@ -115,7 +115,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
         reference = self._qualified_reference()
 
         enum = EnumDataType(
-            identifier="ExtendedSeverity",
+            qualified_name="ExtendedSeverity",
             source_kind=DataTypeSource.FRANCA,
             extends=reference,
         )
@@ -127,14 +127,14 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
             ValidationError, "StructDataType inheritance is only allowed for FRANCA source kind"
         ):
             StructDataType(
-                identifier="ExtendedPosition",
+                qualified_name="ExtendedPosition",
                 source_kind=DataTypeSource.PROTOBUF,
                 extends=self._qualified_reference(),
             )
 
     def test_interprets_a_plain_string_as_an_unresolved_reference(self) -> None:
         typedef = TypedefDataType(
-            identifier="Counter",
+            qualified_name="Counter",
             source_kind=DataTypeSource.FRANCA,
             data_type="uint32",
         )
@@ -143,7 +143,7 @@ class TestUnresolvedDataTypeReference(unittest.TestCase):
 
     def test_keeps_a_primitive_passed_as_enum_member(self) -> None:
         typedef = TypedefDataType(
-            identifier="Counter",
+            qualified_name="Counter",
             source_kind=DataTypeSource.FRANCA,
             data_type=PrimitiveDataType.UINT32,
         )
