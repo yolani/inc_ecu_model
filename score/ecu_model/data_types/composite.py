@@ -53,6 +53,7 @@ class DataTypeField(ModelElement):
         description="Deployment properties aggregated from all communication bindings using this field",
     )
 
+    # TODO: only for backwards compatibility, consider removing this property in the future.
     @property
     def name(self) -> Identifier:
         """Return the field identifier for compatibility with the former data type model."""

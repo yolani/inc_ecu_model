@@ -43,6 +43,7 @@ class EnumValue(ModelElement):
         "may be negative, e.g. Franca allows signed enumerator expressions",
     )
 
+    # TODO: only for backwards compatibility, consider removing this property in the future.
     @property
     def name(self) -> Identifier:
         """Return the enum literal identifier for compatibility with the former data type model."""

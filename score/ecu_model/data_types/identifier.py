@@ -89,6 +89,7 @@ class FullyQualifiedName(ModelElement):
             "namespace": Namespace(namespace),
         }
 
+    # TODO: rename to segments?
     @property
     def names(self) -> list[Identifier]:
         """Return all segments, namespace first and identifier last."""

@@ -49,6 +49,11 @@ class DataTypeSource(str, Enum):
     PROTOBUF = "protobuf"
     CPP_HEADER_FILE = "cpp_header_file"
 
+    @property
+    def separator(self) -> str:
+        """Return the namespace separator used by this source language."""
+        return "::" if self is DataTypeSource.CPP_HEADER_FILE else "."
+
     def __str__(self) -> str:
         """Return the canonical data type source name."""
         return self.value
@@ -88,17 +93,16 @@ class DataTypeBase(ModelElement):
     @classmethod
     def _combine_identifier_and_namespace(cls, data: Any) -> Any:
         """Accept separate identifier/namespace constructor kwargs and combine them into `name`."""
-        if not isinstance(data, dict) or ("identifier" not in data and "namespace" not in data and "name" not in data):
+        if not isinstance(data, dict):
             return data
         if "name" in data and "identifier" not in data and "namespace" not in data:
             data["qualified_name"] = data.pop("name")
             return data
+        if "identifier" not in data and "namespace" not in data:
+            return data
         identifier = data.pop("identifier", None)
         namespace = data.pop("namespace", None)
-        source_kind = data.get("source_kind")
-        if source_kind is None:
-            source_kind_field = cls.model_fields.get("source_kind")
-            source_kind = source_kind_field.default if source_kind_field is not None else None
+        source_kind = data.get("source_kind", cls.model_fields["source_kind"].default)
         data["qualified_name"] = cls._qualify(identifier, namespace, source_kind)
         data.pop("name", None)
         return data
@@ -115,7 +119,11 @@ class DataTypeBase(ModelElement):
             return identifier
         if identifier is None:
             raise ValueError("namespace requires an identifier")
-        segments = namespace.split(cls._get_separator(source_kind)) if isinstance(namespace, str) else namespace
+        if isinstance(namespace, str):
+            if source_kind is None:
+                raise ValueError("source_kind is required for string namespaces")
+            namespace = namespace.split(DataTypeSource(source_kind).separator)
+        segments = namespace
         return FullyQualifiedName(
             identifier=cls._as_identifier(identifier),
             namespace=tuple(cls._as_identifier(segment) for segment in segments),
@@ -126,16 +134,10 @@ class DataTypeBase(ModelElement):
         """Return the value as an Identifier, validating a plain string on the way."""
         return value if isinstance(value, Identifier) else Identifier(value)
 
-    @classmethod
-    def _get_separator(cls, source_kind: DataTypeSource) -> str:
-        """Return the namespace separator used by the given source kind."""
-        if source_kind == DataTypeSource.FRANCA:
-            return "."
-        if source_kind == DataTypeSource.PROTOBUF:
-            return "."
-        if source_kind == DataTypeSource.CPP_HEADER_FILE:
-            return "::"
-        raise ValueError(f"Unsupported data type source kind: {source_kind}")
+    @staticmethod
+    def _get_separator(source_kind: DataTypeSource) -> str:
+        """Keep the former helper available while separator logic lives on the source kind."""
+        return DataTypeSource(source_kind).separator
 
     @field_validator("source_uri")
     @classmethod
@@ -153,12 +155,9 @@ class DataTypeBase(ModelElement):
     @property
     def identifier(self) -> Identifier | None:
         """Return the local identifier, independent of any enclosing namespace."""
-        return (
-            self.qualified_name.identifier
-            if isinstance(self.qualified_name, FullyQualifiedName)
-            else self.qualified_name
-        )
+        return getattr(self.qualified_name, "identifier", self.qualified_name)
 
+    # TODO: only for backwards compatibility, consider removing this property in the future.
     @property
     def name(self) -> Identifier | None:
         """Return the local identifier for compatibility with the former data type model."""
@@ -179,9 +178,11 @@ class DataTypeBase(ModelElement):
         """Return the fully qualified name combining namespace and identifier."""
         if self.qualified_name is None:
             raise ValueError("Data types without an identifier do not have a fully qualified name")
-        if isinstance(self.qualified_name, FullyQualifiedName):
-            return self.qualified_name.render(self._get_separator(self.source_kind))
-        return str(self.qualified_name)
+        return (
+            self.qualified_name.render(self.source_kind.separator)
+            if isinstance(self.qualified_name, FullyQualifiedName)
+            else str(self.qualified_name)
+        )
 
 
 # Use site of a data type: either a builtin primitive or a direct reference to a declared definition.
