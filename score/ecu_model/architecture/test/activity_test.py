@@ -21,7 +21,6 @@ from score.ecu_model.common.version import Version
 from score.ecu_model.communication.binding import CommunicationBinding, NetworkKind, ProtocolKind
 from score.ecu_model.communication.message_channel import MessageChannel
 from score.ecu_model.communication.message_port import ProvidedMessagePort, RequiredMessagePort
-from score.ecu_model.communication.service_interface import InterfaceDefinition, ServiceInterface
 from score.ecu_model.data_types.identifier import QualifiedName
 from score.ecu_model.model import ModelRegistry
 
@@ -42,14 +41,6 @@ class TestActivity(unittest.TestCase):
             name=name,
             channel=MessageChannel(name="SpeedChannel", data_type="SpeedData"),
             binding=CommunicationBinding(protocol=ProtocolKind.ARA_COM, network=NetworkKind.SOMEIP),
-        )
-
-    def _service_interface(self) -> ServiceInterface:
-        return ServiceInterface(
-            name="VehicleStateDeployment",
-            namespace="deployment",
-            design_element=InterfaceDefinition(name="VehicleState", version=Version()),
-            service_id=42,
         )
 
     def test_activity_preserves_scheduling_metadata_and_ports(self) -> None:

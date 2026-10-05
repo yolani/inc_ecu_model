@@ -23,16 +23,25 @@ json_output="$(mktemp)"
 hunks_output="$(mktemp)"
 trap 'rm -f "$json_output" "$hunks_output"' EXIT
 
+# Ignore generated IDE files while still checking tracked and new source files.
+starlark_files=()
+while IFS= read -r -d '' file; do
+  starlark_files+=("$root/$file")
+done < <(
+  git -C "$root" ls-files --cached --others --exclude-standard -z -- \
+    '*.bzl' '*.sky' BUILD BUILD.bazel MODULE.bazel WORKSPACE WORKSPACE.bazel
+)
+
 set +e
 bazel run --ui_event_filters=,+error --noshow_progress -- \
     @buildifier_prebuilt//:buildifier \
-    -r -mode=check -lint=warn -warnings=all -format=json "$root" >"$json_output"
+  -mode=check -lint=warn -warnings=all -format=json "${starlark_files[@]}" >"$json_output"
 buildifier_status=$?
 
 # Code scanning only annotates changed lines, so point at the reformatted hunks.
 bazel run --ui_event_filters=,+error --noshow_progress -- \
     @buildifier_prebuilt//:buildifier \
-    -r -mode=diff -diff_command="diff -U0" "$root" 2>/dev/null |
+  -mode=diff -diff_command="diff -U0" "${starlark_files[@]}" 2>/dev/null |
     awk -v root="${root%/}/" '
         /^--- / {
             file = substr($0, 5)

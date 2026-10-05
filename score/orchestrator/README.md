@@ -15,8 +15,8 @@ SPDX-License-Identifier: Apache-2.0
 
 # Orchestrator
 
-Builds the ECU model from IDL inputs: one Bazel action per parser produces a partial model, a merge action combines
-them. Generators and other model-related steps consume the result as separate rules.
+Builds the ECU model from IDL and other architecture inputs: one Bazel action per parser produces a partial model,
+a merge action combines them. Generators and other model-related steps consume the result as separate rules.
 
 Currently orchestrated parsers:
 
@@ -39,7 +39,7 @@ graph LR
 `ecu_model` is the public API. It decides from the given inputs which parsers run:
 
 1. Each parser with inputs runs in its own Bazel action, so Bazel parallelizes the parsers and caches every partial
-   model on its own: changing a `.proto` file does not re-parse any Franca file.
+   model on its own: changing an input file of one parser does not re-parse inputs from another parser.
 2. A parser action writes its partial model with `ModelRegistry.serialize()`. With inputs for a single parser, this is
    already the model `<name>.pkl` and no merge action runs.
 3. With inputs for several parsers, the merge action adds all partial models `<name>_<parser>.pkl` with
