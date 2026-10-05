@@ -23,7 +23,7 @@ from score.parsers.franca_parser.transformer.file_graph_transformer import (
 from score.parsers.protobuf_parser.api import ProtobufToDataTypeParser
 
 
-class FrancaAdapter(Parser):
+class FrancaDataTypeParserAdapter(Parser):
     """Parse FIDL and FDEPL files into ModelRegistry."""
 
     name = "franca"
@@ -37,7 +37,7 @@ class FrancaAdapter(Parser):
         FrancaFileGraphTransformer(parser.parse_files()).transform_files()
 
 
-class ProtobufAdapter(Parser):
+class ProtobufDataTypeParserAdapter(Parser):
     """Parse protoc descriptor sets into ModelRegistry."""
 
     name = "protobuf"

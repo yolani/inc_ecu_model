@@ -19,7 +19,7 @@ from score.ecu_model.data_types.struct import StructDataType
 from score.ecu_model.model import ModelRegistry
 from score.ecu_model.query import datatypes_by_name
 from score.orchestrator.common import ParsingPathInfo
-from score.orchestrator.parser_adapter import FrancaAdapter, ProtobufAdapter
+from score.orchestrator.parser_adapter import FrancaDataTypeParserAdapter, ProtobufDataTypeParserAdapter
 from score.test_data.inputs import write_descriptor_set, write_fidl
 
 
@@ -38,7 +38,7 @@ class FrancaAdapterTest(_RegistryIsolation):
         with TemporaryDirectory() as directory:
             fidl = write_fidl(Path(directory), "example.franca", "Types", "Value")
 
-            FrancaAdapter(ParsingPathInfo(src_files=(fidl,))).parse()
+            FrancaDataTypeParserAdapter(ParsingPathInfo(src_files=(fidl,))).parse()
 
         datatypes = datatypes_by_name()
         self.assertEqual(list(datatypes), ["example.franca.Types.Value"])
@@ -50,7 +50,7 @@ class ProtobufAdapterTest(_RegistryIsolation):
         with TemporaryDirectory() as directory:
             descriptor_set = write_descriptor_set(Path(directory), "example.proto", "Value")
 
-            ProtobufAdapter(ParsingPathInfo(src_files=(descriptor_set,))).parse()
+            ProtobufDataTypeParserAdapter(ParsingPathInfo(src_files=(descriptor_set,))).parse()
 
         datatypes = datatypes_by_name()
         self.assertEqual(list(datatypes), ["example.proto.Value"])
@@ -61,7 +61,7 @@ class ProtobufAdapterTest(_RegistryIsolation):
             src = write_descriptor_set(Path(directory), "example.proto", "Root")
             dependency = write_descriptor_set(Path(directory), "example.proto", "Dependency")
 
-            ProtobufAdapter(ParsingPathInfo(src_files=(src,), dependency_files=(dependency,))).parse()
+            ProtobufDataTypeParserAdapter(ParsingPathInfo(src_files=(src,), dependency_files=(dependency,))).parse()
 
         self.assertEqual(set(datatypes_by_name()), {"example.proto.Root", "example.proto.Dependency"})
 

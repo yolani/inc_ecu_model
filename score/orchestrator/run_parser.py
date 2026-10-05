@@ -22,9 +22,11 @@ from pathlib import Path
 
 from score.ecu_model.model import ModelRegistry
 from score.orchestrator.common import Parser, ParsingPathInfo
-from score.orchestrator.parser_adapter import FrancaAdapter, ProtobufAdapter
+from score.orchestrator.parser_adapter import FrancaDataTypeParserAdapter, ProtobufDataTypeParserAdapter
 
-PARSERS: dict[str, type[Parser]] = {parser.name: parser for parser in (FrancaAdapter, ProtobufAdapter)}
+PARSERS: dict[str, type[Parser]] = {
+    parser.name: parser for parser in (FrancaDataTypeParserAdapter, ProtobufDataTypeParserAdapter)
+}
 
 
 def main(arguments: Sequence[str] | None = None) -> None:

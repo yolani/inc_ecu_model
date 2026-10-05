@@ -22,8 +22,8 @@ Currently orchestrated parsers:
 
 | Parser | Input | Adapter |
 | --- | --- | --- |
-| [Franca](../parsers/franca_parser) | `.fidl` / `.fdepl` files | [`FrancaAdapter`](parser_adapter.py) |
-| [Protobuf](../parsers/protobuf_parser) | `protoc` descriptor sets | [`ProtobufAdapter`](parser_adapter.py) |
+| [Franca](../parsers/franca_parser) | `.fidl` / `.fdepl` files | [`FrancaDataTypeParserAdapter`](parser_adapter.py) |
+| [Protobuf](../parsers/protobuf_parser) | `protoc` descriptor sets | [`ProtobufDataTypeParserAdapter`](parser_adapter.py) |
 
 ## Architecture
 
